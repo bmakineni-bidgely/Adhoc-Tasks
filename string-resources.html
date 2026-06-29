@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>String Resources Comparison</title>
+  <style>
+    :root {
+      --bg:          #eef3fc;
+      --surface:     #ffffff;
+      --surface-hi:  #f5f8ff;
+      --border:      #dce8f8;
+      --border-hi:   #b0ccf0;
+      --shadow:      0 1px 3px rgba(10,35,80,.06), 0 1px 2px rgba(10,35,80,.04);
+      --shadow-md:   0 4px 16px rgba(10,35,80,.1), 0 2px 4px rgba(10,35,80,.06);
+
+      --text:        #0c1a2e;
+      --muted:       #4d6b8e;
+      --dim:         #9ab4cc;
+
+      --blue:        #1a4fd6;
+      --blue-mid:    #2563eb;
+      --blue-light:  #3b82f6;
+      --blue-pale:   #eff6ff;
+      --blue-bdr:    #bfdbfe;
+
+      --env1-bg:     #1e3a8a;
+      --env2-bg:     #075985;
+
+      --green:       #047857;
+      --green-pale:  #ecfdf5;
+      --green-bdr:   #6ee7b7;
+
+      --amber:       #92400e;
+      --amber-pale:  #fffbeb;
+      --amber-bdr:   #fcd34d;
+
+      --red:         #9f1239;
+      --red-pale:    #fff1f2;
+      --red-bdr:     #fda4af;
+
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', 'Menlo', 'Consolas', monospace;
+      --r: 10px;
+      --r-sm: 6px;
+      --t: 130ms ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ──────────────────────────────────────── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 18px;
+      flex-shrink: 0;
+    }
+
+    .topbar-nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color var(--t), background var(--t);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover  { color: var(--text); background: var(--blue-pale); }
+    .nav-link.active { color: var(--blue); background: var(--blue-pale); font-weight: 600; }
+
+    .topbar-end { margin-left: auto; }
+
+    /* ── Page ────────────────────────────────────────── */
+    .page { padding: 32px 28px 80px; }
+    .form-wrap { max-width: 960px; margin: 0 auto; }
+
+    /* ── Generic card ────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 20px; }
+
+    /* ── Settings panel ──────────────────────────────── */
+    .settings-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .settings-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-hi);
+    }
+
+    .settings-body { padding: 18px; }
+
+    .env-row {
+      display: grid;
+      grid-template-columns: 170px 1fr 28px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .env-row:last-child { margin-bottom: 0; }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 17px;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: color var(--t), background var(--t);
+    }
+
+    .btn-remove:hover { color: var(--red); background: var(--red-pale); }
+
+    /* ── Env columns ─────────────────────────────────── */
+    .env-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .env-col {
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .env-col-head {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .env-col-1 .env-col-head { background: var(--env1-bg); }
+    .env-col-2 .env-col-head { background: var(--env2-bg); }
+
+    .env-col-body {
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .uat-field { display: none; flex-direction: column; gap: 5px; }
+
+    /* ── Inputs ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    select {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px var(--blue-pale);
+      background: var(--surface);
+    }
+
+    input::placeholder { color: var(--dim); }
+
+    select {
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234d6b8e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all var(--t);
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(26,79,214,.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--blue-mid);
+      box-shadow: 0 3px 10px rgba(26,79,214,.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: none; }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      border-color: var(--border-hi);
+      color: var(--text);
+    }
+
+    .btn-sm { padding: 5px 13px; font-size: 12px; }
+
+    /* ── Section trigger row (side-by-side) ──────────── */
+    .trigger-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-trigger {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: var(--shadow);
+      transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    }
+
+    .section-trigger:hover {
+      border-color: var(--border-hi);
+      box-shadow: var(--shadow-md);
+    }
+
+    .section-trigger.active {
+      border-color: var(--blue-bdr);
+      background: var(--blue-pale);
+      box-shadow: 0 0 0 3px rgba(26,79,214,.08), var(--shadow);
+    }
+
+    .trigger-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-pilot   { background: #dbeafe; color: #1d4ed8; }
+    .icon-cluster { background: #d1fae5; color: #047857; }
+
+    .trigger-text { flex: 1; min-width: 0; }
+
+    .trigger-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .trigger-desc {
+      font-size: 11px;
+      color: var(--dim);
+      font-family: var(--mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trigger-chevron {
+      color: var(--dim);
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: transform var(--t), color var(--t);
+    }
+
+    .section-trigger.active .trigger-chevron {
+      transform: rotate(90deg);
+      color: var(--blue);
+    }
+
+    /* ── Input panel (full-width, shown on expand) ────── */
+    .input-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .input-panel.open { display: block; }
+
+    .input-panel-head {
+      padding: 12px 20px;
+      background: var(--surface-hi);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .input-panel-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    .input-panel-path {
+      font-size: 11px;
+      color: var(--dim);
+      font-family: var(--mono);
+    }
+
+    .input-panel-body {
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .input-panel-body .field { min-width: 200px; flex: 1; }
+
+    .cluster-ids {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      flex: 2;
+      min-width: 320px;
+    }
+
+    /* ── Results area ─────────────────────────────────── */
+    .results-area { margin-bottom: 14px; }
+
+    /* ── Summary banner ──────────────────────────────── */
+    .summary-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 13px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-env { font-size: 14px; font-weight: 700; color: var(--text); }
+    .summary-vs  { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); }
+    .summary-sep { color: var(--border-hi); font-size: 18px; margin-left: 2px; }
+
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .pill-red   { background: var(--red-pale);  border: 1px solid var(--red-bdr);   color: var(--red); }
+    .pill-blue  { background: var(--blue-pale);  border: 1px solid var(--blue-bdr);  color: var(--blue); }
+    .pill-green { background: var(--green-pale); border: 1px solid var(--green-bdr); color: var(--green); }
+
+    /* ── Missing keys card ───────────────────────────── */
+    .missing-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .result-card-head {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface-hi);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .count-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 100px;
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      color: var(--blue);
+    }
+
+    /* Two equal columns for missing keys */
+    .missing-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .missing-col { padding: 14px 16px; }
+
+    .missing-col + .missing-col { border-left: 1px solid var(--border); }
+
+    .missing-col-head {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .missing-col-head strong { color: var(--text); }
+
+    .missing-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .missing-tag {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      padding: 5px 10px;
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.45;
+    }
+
+    .missing-none { font-size: 12px; color: var(--dim); font-style: italic; }
+
+    /* ── Value diff card ─────────────────────────────── */
+    .diff-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .diff-table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    th {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: left;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: var(--surface-hi);
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface-hi); }
+
+    .td-key {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--blue);
+      max-width: 300px;
+      word-break: break-all;
+    }
+
+    .td-val {
+      font-size: 13px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    /* ── Alert ───────────────────────────────────────── */
+    .alert {
+      padding: 13px 16px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    .alert-err { background: var(--red-pale); border: 1px solid var(--red-bdr); color: var(--red); }
+
+    /* ── Spinner ─────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 680px) {
+      .env-cols, .trigger-row, .missing-cols, .cluster-ids { grid-template-columns: 1fr; }
+      .missing-col + .missing-col { border-left: none; border-top: 1px solid var(--border); }
+      .topbar { padding: 0 16px; }
+      .topbar-divider { margin: 0 12px; }
+      .nav-link { padding: 5px 8px; font-size: 12px; }
+      .page { padding: 20px 14px 60px; }
+      .form-wrap { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <rect x="9" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <path d="M7.5 8h1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DevTools
+  </a>
+  <div class="topbar-divider"></div>
+  <nav class="topbar-nav">
+    <a href="pilot-config.html" class="nav-link">Pilot Config</a>
+    <a href="string-resources.html" class="nav-link active">String Resources</a>
+  </nav>
+  <div class="topbar-end">
+    <button class="btn btn-ghost btn-sm" onclick="toggleSettings()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.37 11.37l1.41 1.41M3.22 12.78l1.41-1.41M11.37 4.63l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Environments
+    </button>
+  </div>
+</header>
+
+<div class="page">
+
+<div class="form-wrap">
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-head">
+      Environments
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="addEnvRow()">+ Add</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+    <div class="settings-body">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Name &amp; Base URL</div>
+      <div id="envRows"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addEnvRow()">+ Add Environment</button>
+    </div>
+  </div>
+
+  <!-- Shared env + locale selection -->
+  <div class="card">
+    <div class="card-body">
+      <div class="env-cols">
+        <div class="env-col env-col-1">
+          <div class="env-col-head">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+            Environment 1
+          </div>
+          <div class="env-col-body">
+            <div class="field">
+              <label class="field-label">Select</label>
+              <select id="env1Select" onchange="refreshLabels()"></select>
+            </div>
+            <div class="uat-field" id="uat1Field">
+              <label class="field-label">Base URL</label>
+              <input type="url" id="uat1Url" placeholder="https://uat.api.example.com" />
+            </div>
+            <div class="field">
+              <label class="field-label" id="token1Label">Access Token</label>
+              <input type="password" id="token1" placeholder="Paste access token" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+
+        <div class="env-col env-col-2">
+          <div class="env-col-head">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+            Environment 2
+          </div>
+          <div class="env-col-body">
+            <div class="field">
+              <label class="field-label">Select</label>
+              <select id="env2Select" onchange="refreshLabels()"></select>
+            </div>
+            <div class="uat-field" id="uat2Field">
+              <label class="field-label">Base URL</label>
+              <input type="url" id="uat2Url" placeholder="https://uat.api.example.com" />
+            </div>
+            <div class="field">
+              <label class="field-label" id="token2Label">Access Token</label>
+              <input type="password" id="token2" placeholder="Paste access token" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="max-width:160px;">
+        <label class="field-label">Locale</label>
+        <input type="text" id="locale" value="en_US" placeholder="en_US" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section triggers — side by side ─────────────── -->
+  <div class="trigger-row">
+
+    <div class="section-trigger" id="pilotTrigger" onclick="toggleSection('pilot')">
+      <div class="trigger-icon icon-pilot">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="trigger-text">
+        <div class="trigger-title">Pilot String Resources</div>
+        <div class="trigger-desc">/2.1/stringResources/pilot/{pilotId}</div>
+      </div>
+      <span class="trigger-chevron">▶</span>
+    </div>
+
+    <div class="section-trigger" id="clusterTrigger" onclick="toggleSection('cluster')">
+      <div class="trigger-icon icon-cluster">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="trigger-text">
+        <div class="trigger-title">Cluster String Resources</div>
+        <div class="trigger-desc">/2.1/stringResources/cluster/{clusterId}</div>
+      </div>
+      <span class="trigger-chevron">▶</span>
+    </div>
+
+  </div>
+
+</div><!-- /form-wrap -->
+
+  <!-- ── Pilot: full-width input panel + results ─────── -->
+  <div class="input-panel" id="pilotPanel">
+    <div class="input-panel-head">
+      <div class="trigger-icon icon-pilot" style="width:28px;height:28px;border-radius:7px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="input-panel-title">Pilot String Resources</div>
+        <div class="input-panel-path">/2.1/stringResources/pilot/{pilotId}?locale={locale}&amp;access_token=…</div>
+      </div>
+    </div>
+    <div class="input-panel-body">
+      <div class="field">
+        <label class="field-label">Pilot ID</label>
+        <input type="text" id="pilotId" placeholder="Enter pilot ID" />
+      </div>
+      <button class="btn btn-primary" id="pilotBtn" onclick="runPilotCompare()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Compare
+      </button>
+    </div>
+  </div>
+
+  <div class="results-area" id="pilotResults"></div>
+
+  <!-- ── Cluster: full-width input panel + results ────── -->
+  <div class="input-panel" id="clusterPanel">
+    <div class="input-panel-head">
+      <div class="trigger-icon icon-cluster" style="width:28px;height:28px;border-radius:7px;">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="input-panel-title">Cluster String Resources</div>
+        <div class="input-panel-path">/2.1/stringResources/cluster/{clusterId}?locale={locale}&amp;access_token=…</div>
+      </div>
+    </div>
+    <div class="input-panel-body">
+      <div class="cluster-ids">
+        <div class="field">
+          <label class="field-label" id="clusterId1Label">Cluster ID — Env 1</label>
+          <input type="text" id="clusterId1" placeholder="e.g. cluster-001" />
+        </div>
+        <div class="field">
+          <label class="field-label" id="clusterId2Label">Cluster ID — Env 2</label>
+          <input type="text" id="clusterId2" placeholder="e.g. cluster-002" />
+        </div>
+      </div>
+      <button class="btn btn-primary" id="clusterBtn" onclick="runClusterCompare()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Compare
+      </button>
+    </div>
+  </div>
+
+  <div class="results-area" id="clusterResults"></div>
+
+</div>
+
+<script>
+  let environments = [];
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('pc_envs');
+    environments = saved ? JSON.parse(saved) : [
+      { name: 'nonprodqa', url: 'https://nonprodqaapi-external.bidgely.com' },
+      { name: 'Prod-NA2',  url: 'https://naapi2-external.bidgely.com' },
+      { name: 'Prod-NA',   url: 'https://naapi.bidgely.com' },
+      { name: 'Prod-CA',   url: 'https://caapi.bidgely.com' },
+      { name: 'Prod-EU',   url: 'https://api.eu.bidgely.com' },
+      { name: 'UAT',       url: '', dynamic: true },
+    ];
+    renderEnvRows();
+    populateDropdowns();
+  });
+
+  // ── Settings ─────────────────────────────────────────────────
+  function toggleSettings() {
+    const el = document.getElementById('settingsPanel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function renderEnvRows() {
+    document.getElementById('envRows').innerHTML = environments.map((e, i) => `
+      <div class="env-row" id="er-${i}">
+        <input type="text" value="${esc(e.name)}" placeholder="Name"
+               onchange="environments[${i}].name=this.value; populateDropdowns()" />
+        <input type="url"  value="${esc(e.url)}"  placeholder="https://…"
+               onchange="environments[${i}].url=this.value" />
+        <button class="btn-remove" onclick="removeEnv(${i})">×</button>
+      </div>`).join('');
+  }
+
+  function addEnvRow() {
+    environments.push({ name: '', url: '' });
+    renderEnvRows();
+    populateDropdowns();
+  }
+
+  function removeEnv(i) {
+    environments.splice(i, 1);
+    renderEnvRows();
+    populateDropdowns();
+  }
+
+  function saveSettings() {
+    environments.forEach((_, i) => {
+      const row = document.getElementById('er-' + i);
+      if (!row) return;
+      const ins = row.querySelectorAll('input');
+      environments[i].name = ins[0].value;
+      environments[i].url  = ins[1].value;
+    });
+    localStorage.setItem('pc_envs', JSON.stringify(environments));
+    populateDropdowns();
+    document.getElementById('settingsPanel').style.display = 'none';
+  }
+
+  // ── Dropdowns ────────────────────────────────────────────────
+  function populateDropdowns() {
+    const s1 = document.getElementById('env1Select');
+    const s2 = document.getElementById('env2Select');
+    const v1 = s1.value, v2 = s2.value;
+    const opts = environments.map((e, i) =>
+      `<option value="${i}">${esc(e.name || 'Environment ' + (i+1))}</option>`).join('');
+    s1.innerHTML = opts;
+    s2.innerHTML = opts;
+    if (v1 && environments[v1]) s1.value = v1;
+    if (v2 && environments[v2]) s2.value = v2;
+    if (s1.value === s2.value && environments.length > 1)
+      s2.value = s1.value === '0' ? '1' : '0';
+    refreshLabels();
+  }
+
+  function refreshLabels() {
+    const i1 = parseInt(document.getElementById('env1Select').value);
+    const i2 = parseInt(document.getElementById('env2Select').value);
+    const e1 = environments[i1], e2 = environments[i2];
+    const n1 = e1?.name || 'Env 1', n2 = e2?.name || 'Env 2';
+    document.getElementById('token1Label').textContent     = `Access Token — ${n1}`;
+    document.getElementById('token2Label').textContent     = `Access Token — ${n2}`;
+    document.getElementById('clusterId1Label').textContent = `Cluster ID — ${n1}`;
+    document.getElementById('clusterId2Label').textContent = `Cluster ID — ${n2}`;
+    document.getElementById('uat1Field').style.display     = e1?.dynamic ? 'flex' : 'none';
+    document.getElementById('uat2Field').style.display     = e2?.dynamic ? 'flex' : 'none';
+  }
+
+  // ── Toggle section ───────────────────────────────────────────
+  function toggleSection(name) {
+    const panel   = document.getElementById(name + 'Panel');
+    const trigger = document.getElementById(name + 'Trigger');
+    const opening = !panel.classList.contains('open');
+    panel.classList.toggle('open', opening);
+    trigger.classList.toggle('active', opening);
+    if (opening) {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => {
+        const first = panel.querySelector('input[type="text"]');
+        if (first) first.focus();
+      }, 80);
+    }
+  }
+
+  // ── Shared helpers ───────────────────────────────────────────
+  function getContext() {
+    const i1   = parseInt(document.getElementById('env1Select').value);
+    const i2   = parseInt(document.getElementById('env2Select').value);
+    const e1   = environments[i1], e2 = environments[i2];
+    return {
+      base1:  e1?.dynamic ? document.getElementById('uat1Url').value.trim() : e1?.url,
+      base2:  e2?.dynamic ? document.getElementById('uat2Url').value.trim() : e2?.url,
+      tok1:   document.getElementById('token1').value.trim(),
+      tok2:   document.getElementById('token2').value.trim(),
+      locale: document.getElementById('locale').value.trim() || 'en_US',
+      n1:     e1?.name || 'Env 1',
+      n2:     e2?.name || 'Env 2',
+    };
+  }
+
+  function buildUrl(base, path, tok, locale) {
+    const p = new URLSearchParams({ locale });
+    if (tok) p.set('access_token', tok);
+    return base.replace(/\/$/, '') + path + '?' + p.toString();
+  }
+
+  async function fetchResource(url) {
+    try {
+      const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+      const text = await res.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      return { ok: true, status: res.status, json };
+    } catch(e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // Response format: { requestId, payload: { "com.bidgely.x": "string", … } }
+  function extractStringMap(data) {
+    if (!data || typeof data !== 'object') return {};
+    if (data.payload && typeof data.payload === 'object')
+      return Object.fromEntries(Object.entries(data.payload).map(([k, v]) => [k, String(v ?? '')]));
+    for (const key of ['data', 'stringResources', 'strings', 'resources', 'result']) {
+      if (data[key] && typeof data[key] === 'object') {
+        const inner = data[key];
+        if (Object.values(inner).every(v => typeof v !== 'object' || v === null))
+          return Object.fromEntries(Object.entries(inner).map(([k, v]) => [k, String(v ?? '')]));
+      }
+    }
+    if (Object.values(data).every(v => typeof v !== 'object' || v === null))
+      return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v ?? '')]));
+    return {};
+  }
+
+  function compareStringMaps(m1, m2) {
+    const k1 = new Set(Object.keys(m1));
+    const k2 = new Set(Object.keys(m2));
+    return {
+      missingIn1: [...k2].filter(k => !k1.has(k)).sort(),
+      missingIn2: [...k1].filter(k => !k2.has(k)).sort(),
+      valueDiffs: [...k1].filter(k => k2.has(k) && m1[k] !== m2[k]).sort(),
+    };
+  }
+
+  // ── Render results (full-width) ──────────────────────────────
+  function renderDiff(containerId, n1, n2, r1, r2) {
+    const el = document.getElementById(containerId);
+
+    if (!r1.ok || !r2.ok) {
+      el.innerHTML = [
+        !r1.ok && `<div class="alert alert-err"><strong>${esc(n1)}:</strong> ${esc(r1.error)}</div>`,
+        !r2.ok && `<div class="alert alert-err"><strong>${esc(n2)}:</strong> ${esc(r2.error)}</div>`,
+      ].filter(Boolean).join('');
+      return;
+    }
+
+    if (!r1.json || !r2.json) {
+      el.innerHTML = `<div class="alert alert-err">Response is not valid JSON — check the API path and tokens.</div>`;
+      return;
+    }
+
+    const m1 = extractStringMap(r1.json);
+    const m2 = extractStringMap(r2.json);
+    const { missingIn1, missingIn2, valueDiffs } = compareStringMaps(m1, m2);
+    const totalMissing = missingIn1.length + missingIn2.length;
+    const allIdentical = !totalMissing && !valueDiffs.length;
+
+    let html = '';
+
+    // Summary banner
+    html += `<div class="summary-banner">
+      <span class="summary-env">${esc(n1)}</span>
+      <span class="summary-vs">vs</span>
+      <span class="summary-env">${esc(n2)}</span>
+      <span class="summary-sep">·</span>
+      ${allIdentical
+        ? `<span class="summary-pill pill-green">
+             <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+             Strings are identical
+           </span>`
+        : [
+            totalMissing      ? `<span class="summary-pill pill-red">${totalMissing} key${totalMissing!==1?'s':''} missing</span>` : '',
+            valueDiffs.length ? `<span class="summary-pill pill-blue">${valueDiffs.length} value${valueDiffs.length!==1?'s':''} different</span>` : '',
+          ].filter(Boolean).join('')
+      }
+    </div>`;
+
+    if (!allIdentical) {
+
+      // Missing keys — 2-column card
+      html += `<div class="missing-card">
+        <div class="result-card-head">
+          Missing Keys
+          <span class="count-pill">${totalMissing}</span>
+        </div>
+        <div class="missing-cols">
+          <div class="missing-col">
+            <div class="missing-col-head">
+              Not in <strong>${esc(n1)}</strong>
+              <span class="count-pill">${missingIn1.length}</span>
+            </div>
+            <div class="missing-tags">
+              ${missingIn1.length
+                ? missingIn1.map(k => `<div class="missing-tag">${esc(k)}</div>`).join('')
+                : '<div class="missing-none">None</div>'}
+            </div>
+          </div>
+          <div class="missing-col">
+            <div class="missing-col-head">
+              Not in <strong>${esc(n2)}</strong>
+              <span class="count-pill">${missingIn2.length}</span>
+            </div>
+            <div class="missing-tags">
+              ${missingIn2.length
+                ? missingIn2.map(k => `<div class="missing-tag">${esc(k)}</div>`).join('')
+                : '<div class="missing-none">None</div>'}
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      // Value differences — full-width table
+      if (valueDiffs.length) {
+        const rows = valueDiffs.map(k => `<tr>
+          <td class="td-key">${esc(k)}</td>
+          <td class="td-val">${esc(m1[k])}</td>
+          <td class="td-val">${esc(m2[k])}</td>
+        </tr>`).join('');
+
+        html += `<div class="diff-card">
+          <div class="result-card-head">
+            Value Differences
+            <span class="count-pill">${valueDiffs.length}</span>
+          </div>
+          <div class="diff-table-wrap">
+            <table>
+              <thead><tr>
+                <th>Key</th>
+                <th>${esc(n1)}</th>
+                <th>${esc(n2)}</th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+    }
+
+    el.innerHTML = html;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Pilot compare ────────────────────────────────────────────
+  async function runPilotCompare() {
+    const { base1, base2, tok1, tok2, locale, n1, n2 } = getContext();
+    const pid = document.getElementById('pilotId').value.trim();
+    if (!base1 || !base2 || !pid) { if (!pid) document.getElementById('pilotId').focus(); return; }
+
+    const btn = document.getElementById('pilotBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const path = `/2.1/stringResources/pilot/${encodeURIComponent(pid)}`;
+    const [r1, r2] = await Promise.all([
+      fetchResource(buildUrl(base1, path, tok1, locale)),
+      fetchResource(buildUrl(base2, path, tok2, locale)),
+    ]);
+
+    renderDiff('pilotResults', n1, n2, r1, r2);
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Compare';
+  }
+
+  // ── Cluster compare ──────────────────────────────────────────
+  async function runClusterCompare() {
+    const { base1, base2, tok1, tok2, locale, n1, n2 } = getContext();
+    const cid1 = document.getElementById('clusterId1').value.trim();
+    const cid2 = document.getElementById('clusterId2').value.trim();
+    if (!cid1) { document.getElementById('clusterId1').focus(); return; }
+    if (!cid2) { document.getElementById('clusterId2').focus(); return; }
+
+    const btn = document.getElementById('clusterBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const [r1, r2] = await Promise.all([
+      fetchResource(buildUrl(base1, `/2.1/stringResources/cluster/${encodeURIComponent(cid1)}`, tok1, locale)),
+      fetchResource(buildUrl(base2, `/2.1/stringResources/cluster/${encodeURIComponent(cid2)}`, tok2, locale)),
+    ]);
+
+    renderDiff('clusterResults', n1, n2, r1, r2);
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Compare';
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

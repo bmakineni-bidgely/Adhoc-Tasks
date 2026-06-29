@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilot Config Comparison</title>
+  <style>
+    :root {
+      --bg:          #eef3fc;
+      --surface:     #ffffff;
+      --surface-hi:  #f5f8ff;
+      --border:      #dce8f8;
+      --border-hi:   #b0ccf0;
+      --shadow:      0 1px 3px rgba(10,35,80,.06), 0 1px 2px rgba(10,35,80,.04);
+      --shadow-md:   0 4px 16px rgba(10,35,80,.1), 0 2px 4px rgba(10,35,80,.06);
+
+      --text:        #0c1a2e;
+      --muted:       #4d6b8e;
+      --dim:         #9ab4cc;
+
+      --blue:        #1a4fd6;
+      --blue-mid:    #2563eb;
+      --blue-light:  #3b82f6;
+      --blue-pale:   #eff6ff;
+      --blue-bdr:    #bfdbfe;
+
+      --env1-bg:     #1e3a8a;
+      --env2-bg:     #075985;
+
+      --green:       #047857;
+      --green-pale:  #ecfdf5;
+      --green-bdr:   #6ee7b7;
+
+      --amber:       #92400e;
+      --amber-pale:  #fffbeb;
+      --amber-bdr:   #fcd34d;
+
+      --red:         #9f1239;
+      --red-pale:    #fff1f2;
+      --red-bdr:     #fda4af;
+
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', 'Menlo', 'Consolas', monospace;
+      --r: 10px;
+      --r-sm: 6px;
+      --t: 130ms ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ──────────────────────────────────────── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: -0.01em;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 18px;
+      flex-shrink: 0;
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color var(--t), background var(--t);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover  { color: var(--text); background: var(--blue-pale); }
+    .nav-link.active { color: var(--blue); background: var(--blue-pale); font-weight: 600; }
+
+    .topbar-end { margin-left: auto; }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .page { padding: 32px 28px 80px; }
+    .form-wrap { max-width: 960px; margin: 0 auto; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 22px; }
+
+    /* ── Section label ───────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      padding-left: 10px;
+      border-left: 3px solid var(--blue-light);
+    }
+
+    .section-gap { margin-top: 28px; }
+
+    /* ── Inputs ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    .field-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="url"],
+    select {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 11px;
+      width: 100%;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px var(--blue-pale);
+      background: var(--surface);
+    }
+
+    input::placeholder { color: var(--dim); }
+
+    select {
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234d6b8e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
+      padding-right: 30px;
+    }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 20px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all var(--t);
+      user-select: none;
+    }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(26,79,214,.35), 0 0 0 1px rgba(26,79,214,.15);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--blue-mid);
+      box-shadow: 0 3px 10px rgba(26,79,214,.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: none; }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      border-color: var(--border-hi);
+      color: var(--text);
+      background: var(--surface-hi);
+    }
+
+    .btn-sm { padding: 5px 13px; font-size: 12px; }
+
+    /* ── Settings panel ──────────────────────────────── */
+    .settings-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .settings-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-hi);
+    }
+
+    .settings-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+
+    .env-row {
+      display: grid;
+      grid-template-columns: 170px 1fr 28px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .env-row:last-child { margin-bottom: 0; }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 17px;
+      padding: 3px 5px;
+      border-radius: 4px;
+      transition: color var(--t), background var(--t);
+    }
+
+    .btn-remove:hover { color: var(--red); background: var(--red-pale); }
+
+    /* ── Env columns ─────────────────────────────────── */
+    .env-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .env-col {
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .env-col-head {
+      padding: 11px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .env-col-1 .env-col-head { background: var(--env1-bg); }
+    .env-col-2 .env-col-head { background: var(--env2-bg); }
+
+    .env-col-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .uat-field { display: none; flex-direction: column; gap: 5px; }
+
+    /* ── Pilot row ───────────────────────────────────── */
+    .pilot-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding: 16px 18px;
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      border-radius: var(--r);
+    }
+
+    .pilot-row .field { flex: 1; }
+
+    /* ── Summary banner ──────────────────────────────── */
+    .summary-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .summary-env { font-size: 14px; font-weight: 700; color: var(--text); }
+    .summary-vs  { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); padding: 0 2px; }
+    .summary-sep { color: var(--border-hi); font-size: 18px; margin-left: 4px; }
+
+    .summary-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .pill-red   { background: var(--red-pale);   border: 1px solid var(--red-bdr);   color: var(--red); }
+    .pill-amber { background: var(--amber-pale);  border: 1px solid var(--amber-bdr); color: var(--amber); }
+    .pill-blue  { background: var(--blue-pale);   border: 1px solid var(--blue-bdr);  color: var(--blue); }
+    .pill-green { background: var(--green-pale);  border: 1px solid var(--green-bdr); color: var(--green); }
+
+    /* ── Missing configTypes ─────────────────────────── */
+    .missing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .missing-col-head {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .count-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 100px;
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      color: var(--blue);
+    }
+
+    .missing-tags { display: flex; flex-direction: column; gap: 5px; }
+
+    .missing-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 10px;
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    .missing-none { font-size: 12px; color: var(--dim); font-style: italic; }
+
+    /* ── Type blocks ─────────────────────────────────── */
+    .type-blocks { display: flex; flex-direction: column; gap: 8px; }
+
+    .type-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+
+    .type-block.open {
+      border-color: var(--blue-bdr);
+      box-shadow: var(--shadow-md);
+    }
+
+    .type-block-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: background var(--t);
+    }
+
+    .type-block-head:hover { background: var(--surface-hi); }
+
+    .chevron {
+      color: var(--dim);
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: transform var(--t), color var(--t);
+    }
+
+    .type-block.open .chevron { transform: rotate(90deg); color: var(--blue-light); }
+
+    .type-block-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--blue);
+      font-weight: 500;
+      flex: 1;
+      min-width: 0;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    .type-chips { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+    .chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .chip-added   { background: var(--green-pale); color: var(--green); border: 1px solid var(--green-bdr); }
+    .chip-removed { background: var(--red-pale);   color: var(--red);   border: 1px solid var(--red-bdr); }
+    .chip-changed { background: var(--amber-pale); color: var(--amber); border: 1px solid var(--amber-bdr); }
+
+    .type-block-body { display: none; border-top: 1px solid var(--border); }
+    .type-block.open .type-block-body { display: block; }
+
+    /* ── Diff table ──────────────────────────────────── */
+    .diff-table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+    th {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: left;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      background: var(--surface-hi);
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface-hi); }
+
+    .row-added   td { background: rgba(4,120,87,.04); }
+    .row-removed td { background: rgba(159,18,57,.04); }
+    .row-changed td { background: rgba(146,64,14,.04); }
+
+    .td-key {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--blue);
+      max-width: 240px;
+      word-break: break-all;
+    }
+
+    .td-val {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      max-width: 300px;
+      word-break: break-all;
+    }
+
+    .td-missing { color: var(--dim); font-style: italic; font-size: 12px; }
+
+    /* ── Alert ───────────────────────────────────────── */
+    .alert {
+      padding: 13px 16px;
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
+    .alert-ok  { background: var(--green-pale); border: 1px solid var(--green-bdr); color: var(--green); }
+    .alert-err { background: var(--red-pale);   border: 1px solid var(--red-bdr);   color: var(--red); }
+
+    /* ── Spinner ─────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 680px) {
+      .env-cols, .missing-grid { grid-template-columns: 1fr; }
+      .topbar { padding: 0 16px; }
+      .topbar-divider { margin: 0 12px; }
+      .nav-link { padding: 5px 8px; font-size: 12px; }
+      .page { padding: 20px 14px 60px; }
+      .form-wrap { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <rect x="9" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <path d="M7.5 8h1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DevTools
+  </a>
+  <div class="topbar-divider"></div>
+  <nav class="topbar-nav">
+    <a href="pilot-config.html" class="nav-link active">Pilot Config</a>
+    <a href="string-resources.html" class="nav-link">String Resources</a>
+  </nav>
+  <div class="topbar-end">
+    <button class="btn btn-ghost btn-sm" onclick="toggleSettings()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.37 11.37l1.41 1.41M3.22 12.78l1.41-1.41M11.37 4.63l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Environments
+    </button>
+  </div>
+</header>
+
+<div class="page">
+
+<div class="form-wrap">
+  <!-- Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-head">
+      Environments
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="addEnvRow()">+ Add</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+    <div class="settings-body">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">
+          Name &amp; Base URL
+        </div>
+        <div id="envRows"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addEnvRow()">+ Add Environment</button>
+      </div>
+      <div class="field" style="max-width:520px;">
+        <label class="field-label">API Path Template</label>
+        <input type="text" id="apiPathInput" />
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">
+          <code style="font-family:var(--mono);background:var(--surface-hi);padding:1px 5px;border-radius:3px;border:1px solid var(--border);">{pilotId}</code>
+          is replaced with the Pilot ID you enter below
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compare Form -->
+  <div class="card">
+    <div class="card-body">
+
+      <div class="env-cols">
+        <div class="env-col env-col-1">
+          <div class="env-col-head">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+            Environment 1
+          </div>
+          <div class="env-col-body">
+            <div class="field">
+              <label class="field-label">Select</label>
+              <select id="env1Select" onchange="refreshLabels()"></select>
+            </div>
+            <div class="uat-field" id="uat1Field">
+              <label class="field-label">Base URL</label>
+              <input type="url" id="uat1Url" placeholder="https://uat.api.example.com" />
+            </div>
+            <div class="field">
+              <label class="field-label" id="token1Label">Access Token</label>
+              <input type="password" id="token1" placeholder="Paste access token" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+
+        <div class="env-col env-col-2">
+          <div class="env-col-head">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+            Environment 2
+          </div>
+          <div class="env-col-body">
+            <div class="field">
+              <label class="field-label">Select</label>
+              <select id="env2Select" onchange="refreshLabels()"></select>
+            </div>
+            <div class="uat-field" id="uat2Field">
+              <label class="field-label">Base URL</label>
+              <input type="url" id="uat2Url" placeholder="https://uat.api.example.com" />
+            </div>
+            <div class="field">
+              <label class="field-label" id="token2Label">Access Token</label>
+              <input type="password" id="token2" placeholder="Paste access token" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pilot-row">
+        <div class="field">
+          <label class="field-label">Pilot ID</label>
+          <input type="text" id="pilotId" placeholder="Enter pilot ID" />
+        </div>
+        <button class="btn btn-primary" id="compareBtn" onclick="runCompare()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Compare
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+  <!-- Results -->
+  <div id="results" style="display:none;"></div>
+
+</div>
+
+<script>
+  let environments = [];
+  let apiPath = '';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('pc_envs');
+    environments = saved ? JSON.parse(saved) : [
+      { name: 'nonprodqa', url: 'https://nonprodqaapi-external.bidgely.com' },
+      { name: 'Prod-NA2',  url: 'https://naapi2-external.bidgely.com' },
+      { name: 'Prod-NA',   url: 'https://naapi.bidgely.com' },
+      { name: 'Prod-CA',   url: 'https://caapi.bidgely.com' },
+      { name: 'Prod-EU',   url: 'https://api.eu.bidgely.com' },
+      { name: 'UAT',       url: '', dynamic: true },
+    ];
+    apiPath = localStorage.getItem('pc_api_path') || '/entities/pilot/{pilotId}/configs';
+    document.getElementById('apiPathInput').value = apiPath;
+    renderEnvRows();
+    populateDropdowns();
+  });
+
+  // ── Settings ─────────────────────────────────────────────────
+  function toggleSettings() {
+    const el = document.getElementById('settingsPanel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function renderEnvRows() {
+    document.getElementById('envRows').innerHTML = environments.map((e, i) => `
+      <div class="env-row" id="er-${i}">
+        <input type="text" value="${esc(e.name)}" placeholder="Name"
+               onchange="environments[${i}].name=this.value; populateDropdowns()" />
+        <input type="url"  value="${esc(e.url)}"  placeholder="https://…"
+               onchange="environments[${i}].url=this.value" />
+        <button class="btn-remove" onclick="removeEnv(${i})">×</button>
+      </div>`).join('');
+  }
+
+  function addEnvRow() {
+    environments.push({ name: '', url: '' });
+    renderEnvRows();
+    populateDropdowns();
+  }
+
+  function removeEnv(i) {
+    environments.splice(i, 1);
+    renderEnvRows();
+    populateDropdowns();
+  }
+
+  function saveSettings() {
+    environments.forEach((_, i) => {
+      const row = document.getElementById('er-' + i);
+      if (!row) return;
+      const ins = row.querySelectorAll('input');
+      environments[i].name = ins[0].value;
+      environments[i].url  = ins[1].value;
+    });
+    apiPath = document.getElementById('apiPathInput').value.trim();
+    localStorage.setItem('pc_envs', JSON.stringify(environments));
+    localStorage.setItem('pc_api_path', apiPath);
+    populateDropdowns();
+    document.getElementById('settingsPanel').style.display = 'none';
+  }
+
+  // ── Dropdowns ────────────────────────────────────────────────
+  function populateDropdowns() {
+    const s1 = document.getElementById('env1Select');
+    const s2 = document.getElementById('env2Select');
+    const v1 = s1.value, v2 = s2.value;
+    const opts = environments.map((e, i) =>
+      `<option value="${i}">${esc(e.name || 'Environment ' + (i+1))}</option>`).join('');
+    s1.innerHTML = opts;
+    s2.innerHTML = opts;
+    if (v1 && environments[v1]) s1.value = v1;
+    if (v2 && environments[v2]) s2.value = v2;
+    if (s1.value === s2.value && environments.length > 1)
+      s2.value = s1.value === '0' ? '1' : '0';
+    refreshLabels();
+  }
+
+  function refreshLabels() {
+    const i1 = parseInt(document.getElementById('env1Select').value);
+    const i2 = parseInt(document.getElementById('env2Select').value);
+    const e1 = environments[i1], e2 = environments[i2];
+    document.getElementById('token1Label').textContent = `Access Token — ${e1?.name || 'Env 1'}`;
+    document.getElementById('token2Label').textContent = `Access Token — ${e2?.name || 'Env 2'}`;
+    document.getElementById('uat1Field').style.display = e1?.dynamic ? 'flex' : 'none';
+    document.getElementById('uat2Field').style.display = e2?.dynamic ? 'flex' : 'none';
+  }
+
+  // ── Compare ──────────────────────────────────────────────────
+  async function runCompare() {
+    const i1 = parseInt(document.getElementById('env1Select').value);
+    const i2 = parseInt(document.getElementById('env2Select').value);
+    const e1 = environments[i1], e2 = environments[i2];
+    const t1 = document.getElementById('token1').value.trim();
+    const t2 = document.getElementById('token2').value.trim();
+    const pid = document.getElementById('pilotId').value.trim();
+
+    const base1 = e1?.dynamic ? document.getElementById('uat1Url').value.trim() : e1?.url;
+    const base2 = e2?.dynamic ? document.getElementById('uat2Url').value.trim() : e2?.url;
+
+    if (!base1) { (e1?.dynamic ? document.getElementById('uat1Url') : null)?.focus(); return; }
+    if (!base2) { (e2?.dynamic ? document.getElementById('uat2Url') : null)?.focus(); return; }
+    if (!pid)   { document.getElementById('pilotId').focus(); return; }
+
+    const btn = document.getElementById('compareBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const path = (apiPath || '/entities/pilot/{pilotId}/configs').replace('{pilotId}', encodeURIComponent(pid));
+    const url1 = base1.replace(/\/$/, '') + path + (t1 ? '?access_token=' + encodeURIComponent(t1) : '');
+    const url2 = base2.replace(/\/$/, '') + path + (t2 ? '?access_token=' + encodeURIComponent(t2) : '');
+
+    const [r1, r2] = await Promise.all([fetchConfig(url1), fetchConfig(url2)]);
+    renderResults(e1.name, e2.name, r1, r2);
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Compare`;
+  }
+
+  async function fetchConfig(url) {
+    try {
+      const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+      const text = await res.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      return { ok: true, status: res.status, json };
+    } catch(e) {
+      return { ok: false, error: e.message };
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  function renderResults(n1, n2, r1, r2) {
+    const el = document.getElementById('results');
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    if (!r1.ok || !r2.ok) {
+      el.innerHTML = [
+        !r1.ok && `<div class="alert alert-err" style="margin-bottom:10px;"><strong>${esc(n1)}:</strong> ${esc(r1.error)}</div>`,
+        !r2.ok && `<div class="alert alert-err"><strong>${esc(n2)}:</strong> ${esc(r2.error)}</div>`,
+      ].filter(Boolean).join('');
+      return;
+    }
+
+    if (!r1.json || !r2.json) {
+      el.innerHTML = `<div class="alert alert-err">Response is not valid JSON — check the API path and access tokens.</div>`;
+      return;
+    }
+
+    const p1 = parseConfig(r1.json);
+    const p2 = parseConfig(r2.json);
+    const { missingIn1, missingIn2, typeDiffs } = compareConfigs(p1, p2);
+
+    const missingConfigTypes = missingIn1.length + missingIn2.length;
+    const missingConfigKeys  = typeDiffs.reduce((s, td) => s + td.missingKeys1.length + td.missingKeys2.length, 0);
+    const differentValues    = typeDiffs.reduce((s, td) => s + td.valueDiffs.length, 0);
+
+    let html = '';
+
+    // ── Summary banner ─────────────────────────────────────────
+    const allIdentical = !missingConfigTypes && !missingConfigKeys && !differentValues;
+
+    html += `<div class="summary-banner">
+      <span class="summary-env">${esc(n1)}</span>
+      <span class="summary-vs">vs</span>
+      <span class="summary-env">${esc(n2)}</span>
+      <span class="summary-sep">·</span>
+      ${allIdentical
+        ? `<span class="summary-pill pill-green">
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Configs are identical
+           </span>`
+        : [
+            missingConfigTypes ? `<span class="summary-pill pill-red">
+              ${missingConfigTypes} configType${missingConfigTypes !== 1 ? 's' : ''} missing
+            </span>` : '',
+            missingConfigKeys ? `<span class="summary-pill pill-amber">
+              ${missingConfigKeys} config key${missingConfigKeys !== 1 ? 's' : ''} missing
+            </span>` : '',
+            differentValues ? `<span class="summary-pill pill-blue">
+              ${differentValues} config value${differentValues !== 1 ? 's' : ''} different
+            </span>` : '',
+          ].filter(Boolean).join('')
+      }
+    </div>`;
+
+    // ── Missing configTypes ────────────────────────────────────
+    html += `<div class="section-label">ConfigTypes missing from one environment</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="missing-grid">
+          <div>
+            <div class="missing-col-head">
+              Not in <strong>${esc(n1)}</strong>
+              <span class="count-pill">${missingIn1.length}</span>
+            </div>
+            <div class="missing-tags">
+              ${missingIn1.length
+                ? missingIn1.map(t => `<div class="missing-tag">${esc(t)}</div>`).join('')
+                : '<div class="missing-none">None</div>'}
+            </div>
+          </div>
+          <div>
+            <div class="missing-col-head">
+              Not in <strong>${esc(n2)}</strong>
+              <span class="count-pill">${missingIn2.length}</span>
+            </div>
+            <div class="missing-tags">
+              ${missingIn2.length
+                ? missingIn2.map(t => `<div class="missing-tag">${esc(t)}</div>`).join('')
+                : '<div class="missing-none">None</div>'}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // ── Key-level diffs ────────────────────────────────────────
+    if (typeDiffs.length) {
+      html += `<div class="section-label section-gap">ConfigTypes present in both but with differences <span class="count-pill" style="vertical-align:middle;">${typeDiffs.length}</span></div>
+      <div class="type-blocks">`;
+
+      for (const td of typeDiffs) {
+        const id = 'tb-' + td.type.replace(/[^a-z0-9]/gi, '_').slice(0, 40);
+        const rows = [
+          ...td.missingKeys1.map(mk => `<tr class="row-added">
+            <td class="td-key">${esc(mk.key)}</td>
+            <td class="td-missing">—</td>
+            <td class="td-val">${esc(mk.val)}</td>
+            <td><span class="chip chip-added">Missing in ${esc(n1)}</span></td>
+          </tr>`),
+          ...td.missingKeys2.map(mk => `<tr class="row-removed">
+            <td class="td-key">${esc(mk.key)}</td>
+            <td class="td-val">${esc(mk.val)}</td>
+            <td class="td-missing">—</td>
+            <td><span class="chip chip-removed">Missing in ${esc(n2)}</span></td>
+          </tr>`),
+          ...td.valueDiffs.map(vd => `<tr class="row-changed">
+            <td class="td-key">${esc(vd.key)}</td>
+            <td class="td-val">${esc(vd.val1)}</td>
+            <td class="td-val">${esc(vd.val2)}</td>
+            <td><span class="chip chip-changed">Different</span></td>
+          </tr>`),
+        ].join('');
+
+        html += `<div class="type-block" id="${id}">
+          <div class="type-block-head" onclick="document.getElementById('${id}').classList.toggle('open')">
+            <span class="chevron">▶</span>
+            <span class="type-block-name">${esc(td.type)}</span>
+            <div class="type-chips">
+              ${td.missingKeys1.length ? `<span class="chip chip-added">${td.missingKeys1.length} missing in ${esc(n1)}</span>` : ''}
+              ${td.missingKeys2.length ? `<span class="chip chip-removed">${td.missingKeys2.length} missing in ${esc(n2)}</span>` : ''}
+              ${td.valueDiffs.length   ? `<span class="chip chip-changed">${td.valueDiffs.length} different</span>` : ''}
+            </div>
+          </div>
+          <div class="type-block-body">
+            <div class="diff-table-wrap">
+              <table>
+                <thead><tr>
+                  <th>Config Key</th>
+                  <th>${esc(n1)}</th>
+                  <th>${esc(n2)}</th>
+                  <th>Status</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      html += '</div>';
+    }
+
+    el.innerHTML = html;
+  }
+
+  // ── Parsing & diff ───────────────────────────────────────────
+  function parseConfig(data) {
+    const out = {};
+    for (const [type, raw] of Object.entries(data)) {
+      try {
+        const kvMap = {};
+        for (const kv of (JSON.parse(raw).kvs || [])) kvMap[kv.key] = kv;
+        out[type] = kvMap;
+      } catch { out[type] = {}; }
+    }
+    return out;
+  }
+
+  function compareConfigs(p1, p2) {
+    const t1 = new Set(Object.keys(p1));
+    const t2 = new Set(Object.keys(p2));
+
+    const missingIn1 = [...t2].filter(t => !t1.has(t)).sort();
+    const missingIn2 = [...t1].filter(t => !t2.has(t)).sort();
+    const common     = [...t1].filter(t =>  t2.has(t)).sort();
+
+    const typeDiffs = [];
+    for (const type of common) {
+      const k1 = p1[type], k2 = p2[type];
+      const all = new Set([...Object.keys(k1), ...Object.keys(k2)]);
+      const missingKeys1 = [], missingKeys2 = [], valueDiffs = [];
+
+      for (const key of [...all].sort()) {
+        const h1 = key in k1, h2 = key in k2;
+        if (!h1)                           missingKeys1.push({ key, val: k2[key].val });
+        else if (!h2)                      missingKeys2.push({ key, val: k1[key].val });
+        else if (k1[key].val !== k2[key].val) valueDiffs.push({ key, val1: k1[key].val, val2: k2[key].val });
+      }
+
+      if (missingKeys1.length || missingKeys2.length || valueDiffs.length)
+        typeDiffs.push({ type, missingKeys1, missingKeys2, valueDiffs });
+    }
+
+    return { missingIn1, missingIn2, typeDiffs };
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>

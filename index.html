@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Internal Tools</title>
+  <style>
+    :root {
+      --bg:      #eef3fc;
+      --surface: #ffffff;
+      --border:  #dce8f8;
+      --border-hi: #b0ccf0;
+      --text:    #0c1a2e;
+      --muted:   #4d6b8e;
+      --blue:    #1a4fd6;
+      --blue-pale: #eff6ff;
+      --shadow:  0 1px 3px rgba(10,35,80,.06), 0 1px 2px rgba(10,35,80,.04);
+      --shadow-md: 0 4px 16px rgba(10,35,80,.1);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 0;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 18px;
+      flex-shrink: 0;
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 130ms ease, background 130ms ease;
+      white-space: nowrap;
+    }
+
+    .nav-link:hover  { color: var(--text); background: var(--blue-pale); }
+    .nav-link.active { color: var(--blue); background: var(--blue-pale); font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .topbar-divider { margin: 0 12px; }
+      .nav-link { padding: 5px 8px; font-size: 12px; }
+    }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 20px;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .hero p {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 40px;
+      max-width: 440px;
+    }
+
+    /* ── Tools list ── */
+    .tools {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    a.tool-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow);
+      transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+    }
+
+    a.tool-card:hover {
+      border-color: var(--border-hi);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .tool-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--blue-pale);
+      border: 1px solid #bfdbfe;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--blue);
+    }
+
+    .tool-text { flex: 1; min-width: 0; }
+
+    .tool-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .tool-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tool-arrow {
+      color: #b0ccf0;
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: color 130ms ease, transform 130ms ease;
+    }
+
+    a.tool-card:hover .tool-arrow {
+      color: var(--blue);
+      transform: translateX(2px);
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <rect x="9" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <path d="M7.5 8h1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DevTools
+  </a>
+  <div class="topbar-divider"></div>
+  <nav class="topbar-nav">
+    <a href="pilot-config.html" class="nav-link">Pilot Config</a>
+    <a href="string-resources.html" class="nav-link">String Resources</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">Bidgely Engineering</div>
+  <h1>Internal Tools</h1>
+  <p>Utilities for day-to-day engineering tasks — API comparisons, config diffs, and more.</p>
+</div>
+
+<div class="tools">
+
+  <a href="pilot-config.html" class="tool-card">
+    <div class="tool-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="1" y="5" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        <rect x="10" y="5" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8.5 9h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M3.5 8h2M3.5 10.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+        <path d="M12.5 8h2M12.5 10.5h1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+      </svg>
+    </div>
+    <div class="tool-text">
+      <div class="tool-name">Pilot Config Comparison</div>
+      <div class="tool-desc">Compare pilot configs across any two environments</div>
+    </div>
+    <span class="tool-arrow">→</span>
+  </a>
+
+  <a href="string-resources.html" class="tool-card">
+    <div class="tool-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <rect x="2" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M5 7h8M5 10h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="tool-text">
+      <div class="tool-name">String Resources Comparison</div>
+      <div class="tool-desc">Compare pilot and cluster string resources across environments</div>
+    </div>
+    <span class="tool-arrow">→</span>
+  </a>
+
+</div>
+
+</body>
+</html>
