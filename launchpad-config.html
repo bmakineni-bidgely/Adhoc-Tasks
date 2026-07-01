@@ -732,6 +732,7 @@
     USER_META: {
       label:      'User File',
       configType: 'user_creation_launchpad',
+      alwaysShow: true,
       iconClass:  'icon-user',
       icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
@@ -750,6 +751,7 @@
     BILLING: {
       label:      'Invoice File',
       configType: 'invoice_launchpad',
+      alwaysShow: true,
       iconClass:  'icon-invoice',
       icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
@@ -770,6 +772,7 @@
     CONSUMPTION: {
       label:      'Raw Data File',
       configType: 'raw_data_launchpad',
+      alwaysShow: true,
       iconClass:  'icon-raw',
       icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
@@ -1040,8 +1043,10 @@
 
     html += `</div></div>`;
 
-    // Supported file types accordion
-    const mappedKeys = supportedKeys.filter(k => FILE_MAP[k]);
+    // Build file key list: always-show entries + any additional supported keys from transformer_filters
+    const mappedKeys = Object.keys(FILE_MAP).filter(k =>
+      FILE_MAP[k].alwaysShow || supportedKeys.includes(k)
+    );
 
     if (mappedKeys.length === 0) {
       html += `<div class="alert alert-info" style="margin-top:16px;">No recognized file formats found in supported transformer filters.</div>`;
