@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Launchpad File Formats</title>
+  <style>
+    :root {
+      --bg:          #eef3fc;
+      --surface:     #ffffff;
+      --surface-hi:  #f5f8ff;
+      --border:      #dce8f8;
+      --border-hi:   #b0ccf0;
+      --shadow:      0 1px 3px rgba(10,35,80,.06), 0 1px 2px rgba(10,35,80,.04);
+      --shadow-md:   0 4px 16px rgba(10,35,80,.1), 0 2px 4px rgba(10,35,80,.06);
+
+      --text:        #0c1a2e;
+      --muted:       #4d6b8e;
+      --dim:         #9ab4cc;
+
+      --blue:        #1a4fd6;
+      --blue-mid:    #2563eb;
+      --blue-light:  #3b82f6;
+      --blue-pale:   #eff6ff;
+      --blue-bdr:    #bfdbfe;
+
+      --env-bg:      #1e3a8a;
+
+      --green:       #047857;
+      --green-pale:  #ecfdf5;
+      --green-bdr:   #6ee7b7;
+
+      --amber:       #92400e;
+      --amber-pale:  #fffbeb;
+      --amber-bdr:   #fcd34d;
+
+      --red:         #9f1239;
+      --red-pale:    #fff1f2;
+      --red-bdr:     #fda4af;
+
+      --violet:      #5b21b6;
+      --violet-pale: #f5f3ff;
+      --violet-bdr:  #c4b5fd;
+
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', 'Menlo', 'Consolas', monospace;
+      --r: 10px;
+      --r-sm: 6px;
+      --t: 130ms ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ──────────────────────────────────────── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      letter-spacing: -0.01em;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-divider { width: 1px; height: 20px; background: var(--border); margin: 0 18px; flex-shrink: 0; }
+
+    .topbar-nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 5px 11px;
+      border-radius: 6px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color var(--t), background var(--t);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover  { color: var(--text); background: var(--blue-pale); }
+    .nav-link.active { color: var(--blue); background: var(--blue-pale); font-weight: 600; }
+
+    .topbar-end { margin-left: auto; }
+
+    /* ── Page ────────────────────────────────────────── */
+    .page { padding: 32px 28px 80px; }
+    .form-wrap { max-width: 860px; margin: 0 auto; }
+
+    /* ── Card ────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .card-body { padding: 20px; }
+
+    /* ── Settings panel ──────────────────────────────── */
+    .settings-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+
+    .settings-head {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-hi);
+    }
+
+    .settings-body { padding: 16px 18px; }
+
+    .env-setting-row {
+      display: grid;
+      grid-template-columns: 170px 1fr 28px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+
+    .btn-remove {
+      background: none; border: none; color: var(--dim);
+      cursor: pointer; font-size: 17px; padding: 3px 5px;
+      border-radius: 4px; transition: color var(--t), background var(--t);
+    }
+
+    .btn-remove:hover { color: var(--red); background: var(--red-pale); }
+
+    /* ── Inputs ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    .field-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted);
+    }
+
+    input[type="text"], input[type="password"], input[type="url"], select {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--blue-light);
+      box-shadow: 0 0 0 3px var(--blue-pale);
+      background: var(--surface);
+    }
+
+    input::placeholder { color: var(--dim); }
+
+    select {
+      -webkit-appearance: none; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234d6b8e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+
+    /* ── Env col ─────────────────────────────────────── */
+    .env-col { border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+    .env-col-head {
+      padding: 10px 14px; background: var(--env-bg);
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff;
+    }
+
+    .env-col-body { padding: 14px; display: flex; flex-direction: column; gap: 11px; }
+
+    .uat-field { display: none; flex-direction: column; gap: 5px; }
+
+    /* ── Fetch row ───────────────────────────────────── */
+    .fetch-row {
+      display: flex; align-items: flex-end; gap: 12px;
+      padding: 16px 18px; background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr); border-radius: var(--r);
+    }
+
+    .fetch-row .field { flex: 1; }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 18px; border-radius: var(--r-sm);
+      font-size: 13px; font-weight: 600; border: none;
+      cursor: pointer; font-family: var(--font);
+      transition: all var(--t); user-select: none; white-space: nowrap;
+    }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--blue); color: #fff;
+      box-shadow: 0 1px 3px rgba(26,79,214,.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--blue-mid);
+      box-shadow: 0 3px 10px rgba(26,79,214,.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) { transform: none; }
+
+    .btn-ghost {
+      background: var(--surface); color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover:not(:disabled) { border-color: var(--border-hi); color: var(--text); }
+
+    .btn-sm { padding: 5px 13px; font-size: 12px; }
+
+    /* ── Transformer filters card ─────────────────────── */
+    .filters-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .filters-head {
+      padding: 13px 18px;
+      background: var(--surface-hi);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .filters-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    .filters-config-type {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0;
+    }
+
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .filter-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-on  { background: var(--green); }
+    .dot-off { background: var(--dim); }
+
+    .filter-key {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .filter-val {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .filter-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    .fb-on  { background: var(--green-pale); border: 1px solid var(--green-bdr); color: var(--green); }
+    .fb-off { background: var(--surface-hi); border: 1px solid var(--border);    color: var(--dim); }
+
+    /* ── File section card ───────────────────────────── */
+    .file-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .file-section-head {
+      padding: 14px 20px;
+      background: var(--surface-hi);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .file-icon {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .icon-user    { background: #dbeafe; color: #1d4ed8; }
+    .icon-meter   { background: var(--green-pale); color: var(--green); }
+    .icon-invoice { background: var(--amber-pale); color: var(--amber); }
+    .icon-program { background: var(--violet-pale); color: var(--violet); }
+    .icon-raw     { background: #f0fdf4; color: #166534; }
+
+    .file-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+
+    .file-config-type {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 1px;
+    }
+
+    .field-count-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 100px;
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      color: var(--blue);
+    }
+
+    /* ── Field list ──────────────────────────────────── */
+    .field-list {
+      padding: 12px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 14px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-hi);
+      transition: background var(--t), border-color var(--t);
+    }
+
+    .field-item:hover { background: var(--blue-pale); border-color: var(--blue-bdr); }
+
+    /* Mandatory — pink background + red left accent */
+    .field-item.is-mandatory {
+      background: var(--red-pale);
+      border-color: var(--red-bdr);
+      border-left: 3px solid var(--red);
+    }
+
+    .field-item.is-mandatory:hover {
+      background: #ffe4e8;
+      border-color: var(--red-bdr);
+    }
+
+    /* Optional — plain surface + grey left accent */
+    .field-item.is-optional {
+      border-left: 3px solid var(--border-hi);
+    }
+
+    /* Null-position fields */
+    .field-item.no-position {
+      opacity: 0.75;
+    }
+
+    .field-pos-badge {
+      min-width: 34px;
+      height: 24px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .pos-num {
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      color: var(--blue);
+    }
+
+    .pos-null {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--dim);
+    }
+
+    .field-name {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--text);
+      font-weight: 500;
+      flex: 1;
+      word-break: break-all;
+    }
+
+    .mand-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .mand-yes {
+      background: var(--red-pale);
+      border: 1px solid var(--red-bdr);
+      color: var(--red);
+    }
+
+    .mand-no {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--dim);
+    }
+
+    .mand-unknown {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--dim);
+      font-style: italic;
+    }
+
+    /* ── File list accordion ─────────────────────────────────── */
+    .file-list-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .file-list-head {
+      padding: 13px 20px;
+      background: var(--surface-hi);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+    }
+
+    .file-trigger {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--t);
+      user-select: none;
+    }
+
+    .file-trigger:hover { background: var(--blue-pale); }
+    .file-trigger.active { background: var(--blue-pale); }
+
+    .file-trigger-text { flex: 1; min-width: 0; }
+
+    .file-trigger-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .file-trigger-type {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 2px;
+    }
+
+    .file-trigger-count {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 100px;
+      background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr);
+      color: var(--blue);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .file-trigger-chevron {
+      font-size: 20px;
+      color: var(--dim);
+      transition: transform var(--t);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .file-detail-panel {
+      display: none;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    /* Divider between positioned and null-position fields */
+    .null-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .null-divider::before,
+    .null-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Alert ───────────────────────────────────────── */
+    .alert {
+      padding: 13px 16px; border-radius: var(--r-sm);
+      font-size: 13px; display: flex; align-items: flex-start; gap: 9px;
+    }
+
+    .alert-err { background: var(--red-pale); border: 1px solid var(--red-bdr); color: var(--red); }
+    .alert-info { background: var(--blue-pale); border: 1px solid var(--blue-bdr); color: var(--blue); }
+
+    /* ── Spinner ─────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+    }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 680px) {
+      .topbar { padding: 0 16px; }
+      .topbar-divider { margin: 0 12px; }
+      .nav-link { padding: 5px 8px; font-size: 12px; }
+      .page { padding: 20px 14px 60px; }
+      .form-wrap { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <rect x="9" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <path d="M7.5 8h1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DevTools
+  </a>
+  <div class="topbar-divider"></div>
+  <nav class="topbar-nav">
+    <a href="pilot-config.html"    class="nav-link">Pilot Config</a>
+    <a href="string-resources.html" class="nav-link">String Resources</a>
+    <a href="launchpad-config.html" class="nav-link active">Launchpad Formats</a>
+  </nav>
+  <div class="topbar-end">
+    <button class="btn btn-ghost btn-sm" onclick="toggleSettings()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.37 11.37l1.41 1.41M3.22 12.78l1.41-1.41M11.37 4.63l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Environments
+    </button>
+  </div>
+</header>
+
+<div class="page">
+<div class="form-wrap">
+
+  <!-- Settings -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-head">
+      Environments
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="addEnvRow()">+ Add</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+    <div class="settings-body">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Name &amp; Base URL</div>
+      <div id="envRows"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addEnvRow()">+ Add Environment</button>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="card">
+    <div class="card-body">
+      <div class="env-col">
+        <div class="env-col-head">
+          <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+          Environment
+        </div>
+        <div class="env-col-body">
+          <div class="field">
+            <label class="field-label">Select</label>
+            <select id="envSelect" onchange="onEnvChange()"></select>
+          </div>
+          <div class="uat-field" id="uatField">
+            <label class="field-label">Base URL</label>
+            <input type="url" id="uatUrl" placeholder="https://uat.api.example.com" />
+          </div>
+          <div class="field">
+            <label class="field-label" id="tokenLabel">Access Token</label>
+            <input type="password" id="token" placeholder="Paste access token" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+      <div class="fetch-row">
+        <div class="field">
+          <label class="field-label">Pilot ID</label>
+          <input type="text" id="pilotId" placeholder="Enter pilot ID" />
+        </div>
+        <button class="btn btn-primary" id="fetchBtn" onclick="runFetch()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Fetch Config
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- Results — full width -->
+<div id="results"></div>
+
+</div>
+
+<script>
+  let environments = [];
+
+  // Mapping: transformer_filters key → { label, configType, iconClass, icon }
+  const FILE_MAP = {
+    USER_META: {
+      label:      'User File',
+      configType: 'user_creation_launchpad',
+      iconClass:  'icon-user',
+      icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+               <circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/>
+               <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+             </svg>`,
+    },
+    METER: {
+      label:      'Meter File',
+      configType: 'meter_creation_launchpad',
+      iconClass:  'icon-meter',
+      icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+               <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+               <path d="M5 8h2l1.5-3L10 11l1-3h1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>`,
+    },
+    BILLING: {
+      label:      'Invoice File',
+      configType: 'invoice_launchpad',
+      iconClass:  'icon-invoice',
+      icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+               <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+               <path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+             </svg>`,
+    },
+    USER_PROGRAM: {
+      label:      'Program File',
+      configType: 'program_part_launchpad',
+      iconClass:  'icon-program',
+      icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+               <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+               <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+               <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+               <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+             </svg>`,
+    },
+    CONSUMPTION: {
+      label:      'Raw Data File',
+      configType: 'raw_data_launchpad',
+      iconClass:  'icon-raw',
+      icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+               <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+               <path d="M5 5h6M5 8h4M5 11h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+               <path d="M9 10l2 1-2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>`,
+    },
+  };
+
+  // ── Init ─────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('pc_envs');
+    environments = saved ? JSON.parse(saved) : [
+      { name: 'nonprodqa', url: 'https://nonprodqaapi-external.bidgely.com' },
+      { name: 'Prod-NA2',  url: 'https://naapi2-external.bidgely.com' },
+      { name: 'Prod-NA',   url: 'https://naapi.bidgely.com' },
+      { name: 'Prod-CA',   url: 'https://caapi.bidgely.com' },
+      { name: 'Prod-EU',   url: 'https://api.eu.bidgely.com' },
+      { name: 'UAT',       url: '', dynamic: true },
+    ];
+    renderEnvRows();
+    populateDropdown();
+  });
+
+  // ── Settings ─────────────────────────────────────────────────
+  function toggleSettings() {
+    const el = document.getElementById('settingsPanel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function renderEnvRows() {
+    document.getElementById('envRows').innerHTML = environments.map((e, i) => `
+      <div class="env-setting-row" id="er-${i}">
+        <input type="text" value="${esc(e.name)}" placeholder="Name"
+               onchange="environments[${i}].name=this.value; populateDropdown()" />
+        <input type="url"  value="${esc(e.url)}"  placeholder="https://…"
+               onchange="environments[${i}].url=this.value" />
+        <button class="btn-remove" onclick="removeEnv(${i})">×</button>
+      </div>`).join('');
+  }
+
+  function addEnvRow() { environments.push({ name: '', url: '' }); renderEnvRows(); populateDropdown(); }
+  function removeEnv(i) { environments.splice(i, 1); renderEnvRows(); populateDropdown(); }
+
+  function saveSettings() {
+    environments.forEach((_, i) => {
+      const row = document.getElementById('er-' + i);
+      if (!row) return;
+      const ins = row.querySelectorAll('input');
+      environments[i].name = ins[0].value;
+      environments[i].url  = ins[1].value;
+    });
+    localStorage.setItem('pc_envs', JSON.stringify(environments));
+    populateDropdown();
+    document.getElementById('settingsPanel').style.display = 'none';
+  }
+
+  function populateDropdown() {
+    const sel = document.getElementById('envSelect');
+    const prev = sel.value;
+    sel.innerHTML = environments.map((e, i) =>
+      `<option value="${i}">${esc(e.name || 'Environment ' + (i+1))}</option>`).join('');
+    if (prev && environments[prev]) sel.value = prev;
+    onEnvChange();
+  }
+
+  function onEnvChange() {
+    const e = environments[parseInt(document.getElementById('envSelect').value)];
+    document.getElementById('tokenLabel').textContent = `Access Token — ${e?.name || 'Env'}`;
+    document.getElementById('uatField').style.display = e?.dynamic ? 'flex' : 'none';
+  }
+
+  // ── Fetch ─────────────────────────────────────────────────────
+  async function runFetch() {
+    const i   = parseInt(document.getElementById('envSelect').value);
+    const env = environments[i];
+    const base  = env?.dynamic ? document.getElementById('uatUrl').value.trim() : env?.url;
+    const token = document.getElementById('token').value.trim();
+    const pid   = document.getElementById('pilotId').value.trim();
+
+    if (!base) { document.getElementById('uatUrl')?.focus(); return; }
+    if (!pid)  { document.getElementById('pilotId').focus(); return; }
+
+    const btn = document.getElementById('fetchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const params = token ? `?access_token=${encodeURIComponent(token)}` : '';
+    const url = `${base.replace(/\/$/, '')}/entities/pilot/${encodeURIComponent(pid)}/configs${params}`;
+
+    let r;
+    try {
+      const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+      const text = await res.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch {}
+      r = { ok: true, json };
+    } catch(e) {
+      r = { ok: false, error: e.message };
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Fetch Config`;
+
+    renderResults(env?.name || 'Env', pid, r);
+  }
+
+  // ── Parse raw pilot config ────────────────────────────────────
+  function parsePilotConfig(data) {
+    const out = {};
+    for (const [type, raw] of Object.entries(data)) {
+      try {
+        const parsed = JSON.parse(raw);
+        const kvMap = {};
+        for (const kv of (parsed.kvs || [])) kvMap[kv.key] = kv;
+        out[type] = kvMap;
+      } catch { out[type] = {}; }
+    }
+    return out;
+  }
+
+  // Find a configType by case-insensitive substring match
+  function findConfigType(parsed, name) {
+    const lower = name.toLowerCase();
+    const match = Object.keys(parsed).find(k => k.toLowerCase() === lower)
+               || Object.keys(parsed).find(k => k.toLowerCase().includes(lower));
+    return match ? parsed[match] : null;
+  }
+
+  // ── Parse fields from a launchpad configType ─────────────────
+  // Tries multiple structures:
+  //   A) kv.key = fieldName, kv.val = JSON { fieldPosition, mandatory, ... }
+  //   B) keys like "FIELD.fieldPosition" / "FIELD.mandatory" / "FIELD.fieldName"
+  //   C) keys like "FIELD_POSITION" / "FIELD_MANDATORY"
+  //   D) keys like "fieldPosition.FIELD" / "mandatory.FIELD"
+  function parseFields(kvMap) {
+    const fields = {}; // id → { fieldName, fieldPosition, mandatory }
+
+    const ensure = id => { if (!fields[id]) fields[id] = { fieldName: id, fieldPosition: null, mandatory: null }; };
+
+    for (const [key, kv] of Object.entries(kvMap)) {
+      const val = kv.val ?? '';
+
+      // Strategy A: val is a JSON object with fieldPosition / mandatory
+      if (val.trim().startsWith('{')) {
+        try {
+          const obj = JSON.parse(val);
+          ensure(key);
+          if (obj.fieldPosition !== undefined) fields[key].fieldPosition = obj.fieldPosition;
+          // Pick the first matching field-name key (each configType uses a different one)
+          const FIELD_NAME_KEYS = [
+            'launchPadUserCreationField',
+            'launchPadInvoiceField',
+            'programParticipationField',
+            'launchpadMeterEnrollmentField',
+            'launchpadRawDataField',
+            'launchpadUserPreferencesField',
+            'fieldName',
+          ];
+          for (const nk of FIELD_NAME_KEYS) {
+            if (obj[nk] !== undefined) { fields[key].fieldName = obj[nk]; break; }
+          }
+          if (obj.utilityFieldMandatory !== undefined) fields[key].mandatory = obj.utilityFieldMandatory;
+          if (obj.mandatory             !== undefined) fields[key].mandatory = obj.mandatory;
+          if (obj.isMandatory           !== undefined) fields[key].mandatory = obj.isMandatory;
+          if (obj.required              !== undefined) fields[key].mandatory = obj.required;
+          continue;
+        } catch {}
+      }
+
+      // Strategy B: "PREFIX.fieldPosition" / "PREFIX.mandatory" / "PREFIX.fieldName" / "PREFIX.launchpadUserPreferencesField"
+      const dotPos  = key.match(/^(.+?)\.fieldPosition$/i);
+      const dotMand = key.match(/^(.+?)\.(?:mandatory|isMandatory|required)$/i);
+      const dotName = key.match(/^(.+?)\.(?:fieldName|launchPadUserCreationField|launchPadInvoiceField|programParticipationField|launchpadMeterEnrollmentField|launchpadRawDataField|launchpadUserPreferencesField)$/i);
+
+      if (dotPos)  { ensure(dotPos[1]);  fields[dotPos[1]].fieldPosition  = val; continue; }
+      if (dotMand) { ensure(dotMand[1]); fields[dotMand[1]].mandatory      = val; continue; }
+      if (dotName) { ensure(dotName[1]); fields[dotName[1]].fieldName      = val; continue; }
+
+      // Strategy C: "PREFIX_FIELD_POSITION" / "PREFIX_MANDATORY"
+      const usPos  = key.match(/^(.+?)_(?:FIELD_)?POSITION$/i);
+      const usMand = key.match(/^(.+?)_(?:MANDATORY|IS_MANDATORY|REQUIRED)$/i);
+      const usName = key.match(/^(.+?)_FIELD_NAME$/i);
+
+      if (usPos)  { ensure(usPos[1]);  fields[usPos[1]].fieldPosition  = val; continue; }
+      if (usMand) { ensure(usMand[1]); fields[usMand[1]].mandatory      = val; continue; }
+      if (usName) { ensure(usName[1]); fields[usName[1]].fieldName      = val; continue; }
+
+      // Strategy D: "fieldPosition.FIELD" reverse — uncommon but check
+      const revPos  = key.match(/^fieldPosition\.(.+)$/i);
+      const revMand = key.match(/^(?:mandatory|required)\.(.+)$/i);
+
+      if (revPos)  { ensure(revPos[1]);  fields[revPos[1]].fieldPosition  = val; continue; }
+      if (revMand) { ensure(revMand[1]); fields[revMand[1]].mandatory      = val; continue; }
+
+      // No pattern matched — treat the kv itself as a raw field entry:
+      // key = fieldName, val = fieldPosition (common simple format)
+      ensure(key);
+      const numericVal = !isNaN(val) && val.trim() !== '';
+      if (numericVal && fields[key].fieldPosition === null) fields[key].fieldPosition = val;
+      else if (!numericVal && fields[key].fieldPosition === null) {
+        // val might be "true/false" = mandatory indicator
+        if (/^(true|false|yes|no)$/i.test(val)) fields[key].mandatory = val;
+        else fields[key].extra = val;
+      }
+    }
+
+    return Object.values(fields);
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function renderResults(envName, pid, r) {
+    const el = document.getElementById('results');
+
+    if (!r.ok) {
+      el.innerHTML = `<div class="alert alert-err" style="max-width:860px;margin:0 auto;">${esc(r.error)}</div>`;
+      return;
+    }
+
+    if (!r.json || typeof r.json !== 'object') {
+      el.innerHTML = `<div class="alert alert-err" style="max-width:860px;margin:0 auto;">Response is not valid JSON — check the API path and access token.</div>`;
+      return;
+    }
+
+    const parsed = parsePilotConfig(r.json);
+
+    const tfKvMap = findConfigType(parsed, 'transformer_filters');
+
+    if (!tfKvMap) {
+      el.innerHTML = `<div class="alert alert-info" style="max-width:860px;margin:0 auto;">
+        No <code style="font-family:var(--mono);">transformer_filters</code> configType found in pilot config.
+      </div>`;
+      return;
+    }
+
+    const isSupportedVal = v => !/^(false|disabled|0|no)$/i.test(String(v ?? '').trim());
+
+    const supportedKeys = Object.entries(tfKvMap)
+      .filter(([, kv]) => isSupportedVal(kv.val))
+      .map(([key]) => key);
+
+    let html = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.01em;">Launchpad File Formats</div>
+        <div style="font-size:12px;color:var(--muted);">
+          Pilot <code style="font-family:var(--mono);background:var(--surface);padding:1px 6px;border-radius:4px;border:1px solid var(--border);color:var(--blue);">${esc(pid)}</code>
+          on <strong>${esc(envName)}</strong>
+        </div>
+      </div>`;
+
+    // Transformer filters card
+    html += `<div class="filters-card">
+      <div class="filters-head">
+        <span class="filters-title">Transformer Filters</span>
+        <span class="filters-config-type">transformer_filters</span>
+      </div>
+      <div class="filters-grid">`;
+
+    for (const [key, kv] of Object.entries(tfKvMap)) {
+      const on = isSupportedVal(kv.val);
+      html += `<div class="filter-item">
+        <span class="filter-dot ${on ? 'dot-on' : 'dot-off'}"></span>
+        <span class="filter-key">${esc(key)}</span>
+        <span class="filter-val">${esc(kv.val)}</span>
+        <span class="filter-badge ${on ? 'fb-on' : 'fb-off'}">${on ? 'Supported' : 'Not supported'}</span>
+      </div>`;
+    }
+
+    html += `</div></div>`;
+
+    // Supported file types accordion
+    const mappedKeys = supportedKeys.filter(k => FILE_MAP[k]);
+
+    if (mappedKeys.length === 0) {
+      html += `<div class="alert alert-info" style="margin-top:16px;">No recognized file formats found in supported transformer filters.</div>`;
+    } else {
+      html += `<div class="file-list-card">
+        <div class="file-list-head">
+          Supported File Types
+          <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:8px;">${mappedKeys.length} type${mappedKeys.length !== 1 ? 's' : ''} — click to expand</span>
+        </div>`;
+
+      for (const filterKey of mappedKeys) {
+        const def   = FILE_MAP[filterKey];
+        const kvMap = findConfigType(parsed, def.configType);
+        const fields = kvMap ? parseFields(kvMap) : null;
+
+        let countLabel = '';
+        if (fields) {
+          const req = fields.filter(f => isMandatory(f.mandatory) === true).length;
+          countLabel = `${fields.length} field${fields.length !== 1 ? 's' : ''}`;
+          if (req > 0) countLabel += ` · ${req} required`;
+        }
+
+        const countBadge = fields
+          ? `<span class="file-trigger-count">${countLabel}</span>`
+          : `<span class="file-trigger-count" style="background:var(--red-pale);border-color:var(--red-bdr);color:var(--red);">Not found</span>`;
+
+        html += `
+          <div class="file-trigger" id="trigger-${filterKey}" onclick="toggleFileDetail('${filterKey}')">
+            <div class="file-icon ${def.iconClass}">${def.icon}</div>
+            <div class="file-trigger-text">
+              <div class="file-trigger-name">${esc(def.label)}</div>
+              <div class="file-trigger-type">${esc(def.configType)}</div>
+            </div>
+            ${countBadge}
+            <span class="file-trigger-chevron" id="chev-${filterKey}">›</span>
+          </div>
+          <div class="file-detail-panel" id="detail-${filterKey}">
+            ${renderFieldPanel(fields)}
+          </div>`;
+      }
+
+      html += `</div>`; // /file-list-card
+    }
+
+    // Unsupported / unmapped keys note
+    const unmappedKeys = supportedKeys.filter(k => !FILE_MAP[k]);
+    if (unmappedKeys.length > 0) {
+      html += `<div style="font-size:12px;color:var(--muted);margin-top:8px;">
+        Unknown transformer_filter keys (no config mapping): ${unmappedKeys.map(k => `<code style="font-family:var(--mono);background:var(--surface);padding:1px 5px;border-radius:3px;border:1px solid var(--border);">${esc(k)}</code>`).join(', ')}
+      </div>`;
+    }
+
+    el.innerHTML = html;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function toggleFileDetail(key) {
+    const panel   = document.getElementById('detail-'   + key);
+    const chev    = document.getElementById('chev-'     + key);
+    const trigger = document.getElementById('trigger-'  + key);
+    const isOpen  = panel.style.display === 'block';
+    panel.style.display         = isOpen ? 'none'  : 'block';
+    if (chev)    chev.style.transform    = isOpen ? ''            : 'rotate(90deg)';
+    if (trigger) trigger.classList.toggle('active', !isOpen);
+  }
+
+  function renderFieldPanel(fields) {
+    if (!fields) {
+      return `<div style="padding:20px 24px;font-size:13px;color:var(--dim);font-style:italic;">ConfigType not present in pilot config.</div>`;
+    }
+    if (fields.length === 0) {
+      return `<div style="padding:20px 24px;font-size:13px;color:var(--dim);font-style:italic;">No fields found.</div>`;
+    }
+
+    const withPos    = fields
+      .filter(f => f.fieldPosition !== null && f.fieldPosition !== '' && !isNaN(f.fieldPosition))
+      .sort((a, b) => Number(a.fieldPosition) - Number(b.fieldPosition));
+    const withoutPos = fields
+      .filter(f => f.fieldPosition === null || f.fieldPosition === '' || isNaN(f.fieldPosition));
+
+    let html = `<div class="field-list">`;
+
+    for (const f of withPos) html += fieldItem(f, isMandatory(f.mandatory), false);
+
+    if (withoutPos.length > 0) {
+      if (withPos.length > 0) html += `<div class="null-divider">No Position</div>`;
+      for (const f of withoutPos) html += fieldItem(f, isMandatory(f.mandatory), true);
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function isMandatory(val) {
+    if (val === null || val === undefined) return null;
+    return /^(true|yes|1|mandatory)$/i.test(String(val).trim());
+  }
+
+  function mandBadge(isMand) {
+    if (isMand === null)  return `<span class="mand-badge mand-unknown">—</span>`;
+    if (isMand === true)  return `<span class="mand-badge mand-yes">Required</span>`;
+    return                       `<span class="mand-badge mand-no">Optional</span>`;
+  }
+
+  function fieldItem(f, isMand, noPos) {
+    const posClass  = noPos ? 'no-position' : '';
+    const mandClass = isMand === true ? 'is-mandatory' : 'is-optional';
+    const posHtml   = noPos
+      ? `<span class="field-pos-badge pos-null">—</span>`
+      : `<span class="field-pos-badge pos-num">${esc(String(f.fieldPosition))}</span>`;
+
+    return `<div class="field-item ${mandClass} ${posClass}">
+      ${posHtml}
+      <span class="field-name">${esc(f.fieldName)}</span>
+      ${mandBadge(isMand)}
+    </div>`;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
