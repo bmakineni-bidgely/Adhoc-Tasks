@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notification Viewer</title>
+  <style>
+    :root {
+      --bg:         #eef3fc;
+      --surface:    #ffffff;
+      --surface-hi: #f5f8ff;
+      --border:     #dce8f8;
+      --border-hi:  #b0ccf0;
+      --shadow:     0 1px 3px rgba(10,35,80,.06), 0 1px 2px rgba(10,35,80,.04);
+      --shadow-md:  0 4px 16px rgba(10,35,80,.1), 0 2px 4px rgba(10,35,80,.06);
+      --text:       #0c1a2e;
+      --muted:      #4d6b8e;
+      --dim:        #9ab4cc;
+      --blue:       #1a4fd6;
+      --blue-mid:   #2563eb;
+      --blue-light: #3b82f6;
+      --blue-pale:  #eff6ff;
+      --blue-bdr:   #bfdbfe;
+      --env-bg:     #1e3a8a;
+      --green:      #047857;
+      --green-pale: #ecfdf5;
+      --green-bdr:  #6ee7b7;
+      --red:        #9f1239;
+      --red-pale:   #fff1f2;
+      --red-bdr:    #fda4af;
+      --amber:      #92400e;
+      --amber-pale: #fffbeb;
+      --amber-bdr:  #fcd34d;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', 'Menlo', 'Consolas', monospace;
+      --r: 10px; --r-sm: 6px; --t: 130ms ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-logo {
+      display: flex; align-items: center; gap: 9px;
+      text-decoration: none; font-size: 14px; font-weight: 700;
+      color: var(--blue); letter-spacing: -0.01em; flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 30px; height: 30px; background: var(--blue);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    }
+
+    .topbar-divider { width: 1px; height: 20px; background: var(--border); margin: 0 18px; flex-shrink: 0; }
+    .topbar-nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .topbar-end { margin-left: auto; }
+
+    .nav-link {
+      font-size: 13px; font-weight: 500; padding: 5px 11px; border-radius: 6px;
+      color: var(--muted); text-decoration: none;
+      transition: color var(--t), background var(--t); white-space: nowrap;
+    }
+    .nav-link:hover  { color: var(--text); background: var(--blue-pale); }
+    .nav-link.active { color: var(--blue); background: var(--blue-pale); font-weight: 600; }
+
+    /* ── Layout ── */
+    .page { padding: 32px 28px 80px; }
+    .form-wrap { max-width: 860px; margin: 0 auto; }
+
+    /* ── Card ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    .card-body { padding: 20px; }
+
+    /* ── Settings panel ── */
+    .settings-panel {
+      display: none; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); margin-bottom: 16px; overflow: hidden; box-shadow: var(--shadow-md);
+    }
+    .settings-head {
+      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 600; display: flex; align-items: center;
+      justify-content: space-between; background: var(--surface-hi);
+    }
+    .settings-body { padding: 16px 18px; }
+    .env-setting-row { display: grid; grid-template-columns: 170px 1fr 28px; gap: 8px; align-items: center; margin-bottom: 7px; }
+    .btn-remove {
+      background: none; border: none; color: var(--dim); cursor: pointer;
+      font-size: 17px; padding: 3px 5px; border-radius: 4px; transition: color var(--t), background var(--t);
+    }
+    .btn-remove:hover { color: var(--red); background: var(--red-pale); }
+
+    /* ── Inputs ── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field-label { font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+
+    input[type="text"], input[type="password"], input[type="url"], select {
+      background: var(--surface-hi); border: 1px solid var(--border); border-radius: var(--r-sm);
+      color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 10px;
+      width: 100%; outline: none; transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    }
+    input:focus, select:focus { border-color: var(--blue-light); box-shadow: 0 0 0 3px var(--blue-pale); background: var(--surface); }
+    input::placeholder { color: var(--dim); }
+    select {
+      -webkit-appearance: none; appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%234d6b8e' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Env col ── */
+    .env-col { border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow); margin-bottom: 16px; }
+    .env-col-head {
+      padding: 10px 14px; background: var(--env-bg);
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff;
+    }
+    .env-col-body { padding: 14px; display: flex; flex-direction: column; gap: 11px; }
+    .uat-field { display: none; flex-direction: column; gap: 5px; }
+
+    /* ── Fetch row ── */
+    .fetch-row {
+      display: flex; align-items: flex-end; gap: 12px;
+      padding: 16px 18px; background: var(--blue-pale);
+      border: 1px solid var(--blue-bdr); border-radius: var(--r);
+    }
+    .fetch-row .field { flex: 1; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 18px;
+      border-radius: var(--r-sm); font-size: 13px; font-weight: 600; border: none;
+      cursor: pointer; font-family: var(--font); transition: all var(--t);
+      user-select: none; white-space: nowrap;
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 1px 3px rgba(26,79,214,.3); }
+    .btn-primary:hover:not(:disabled) { background: var(--blue-mid); box-shadow: 0 3px 10px rgba(26,79,214,.35); transform: translateY(-1px); }
+    .btn-primary:active:not(:disabled) { transform: none; }
+    .btn-ghost { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--border-hi); color: var(--text); }
+    .btn-sm { padding: 5px 13px; font-size: 12px; }
+
+    /* ── Summary bar ── */
+    .summary-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px; padding: 14px 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); box-shadow: var(--shadow);
+    }
+
+    .summary-total {
+      font-size: 14px; font-weight: 800; color: var(--text);
+      margin-right: 4px; flex-shrink: 0;
+    }
+
+    .mode-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px 3px 8px; border-radius: 100px;
+      font-size: 11px; font-weight: 600;
+      border: 1px solid var(--blue-bdr);
+      background: var(--blue-pale); color: var(--blue);
+    }
+
+    .mode-chip-count {
+      background: var(--blue); color: #fff;
+      border-radius: 100px; padding: 0 6px;
+      font-size: 10px; font-weight: 700; line-height: 1.6;
+    }
+
+    /* ── Filter panel ── */
+    .filter-panel {
+      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+      padding: 16px 20px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--r);
+      box-shadow: var(--shadow); margin-bottom: 24px;
+    }
+
+    .filter-field { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+
+    /* ── Notification viewer ── */
+    .notification-viewer {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .notification-meta {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow-md);
+      padding: 28px 32px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .notification-title {
+      font-size: 22px; font-weight: 800; color: var(--text);
+      letter-spacing: -0.02em; margin-bottom: 6px;
+    }
+
+    .notification-text {
+      font-size: 14px; color: var(--muted); margin-bottom: 8px;
+    }
+
+    .notif-generated-ts {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--dim);
+      letter-spacing: 0.03em;
+      margin-bottom: 14px;
+    }
+
+    .notif-badge-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+
+    .notif-badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 700;
+      background: var(--blue-pale); border: 1px solid var(--blue-bdr); color: var(--blue);
+    }
+
+    .notif-badge.status-delivered  { background: var(--green-pale); border-color: var(--green-bdr); color: var(--green); }
+    .notif-badge.status-generated  { background: var(--amber-pale); border-color: var(--amber-bdr); color: var(--amber); }
+    .notif-badge.status-failed     { background: var(--red-pale);   border-color: var(--red-bdr);   color: var(--red); }
+
+    /* ── Simple (title-only) card — WhatsApp / SMS ── */
+    .simple-notif-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow-md);
+      padding: 40px 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .simple-mode-icon {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .simple-mode-icon.icon-whatsapp { background: #dcfce7; color: #16a34a; }
+    .simple-mode-icon.icon-sms      { background: #ede9fe; color: #6d28d9; }
+    .simple-mode-icon.icon-default  { background: var(--blue-pale); color: var(--blue); }
+
+    .simple-mode-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .simple-notif-title {
+      font-size: 26px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.02em;
+      line-height: 1.2;
+      max-width: 520px;
+    }
+
+    .simple-ts {
+      font-size: 12px; color: var(--dim);
+      font-weight: 500;
+    }
+
+    .simple-delivered-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--green);
+      font-weight: 600;
+      background: var(--green-pale);
+      border: 1px solid var(--green-bdr);
+      padding: 5px 14px; border-radius: 100px;
+    }
+
+    /* ── Body card ── */
+    .body-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .body-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 18px;
+      background: var(--surface-hi);
+      border-bottom: 1px solid var(--border);
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.07em;
+    }
+
+    .email-frame {
+      display: block; width: 100%; height: 680px;
+      border: none;
+    }
+
+    .pdf-frame {
+      display: block; width: 100%; height: 680px;
+      border: none;
+    }
+
+    .body-text {
+      padding: 20px;
+      white-space: pre-wrap;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--text);
+      line-height: 1.65;
+      background: var(--surface-hi);
+    }
+
+    /* ── Alert ── */
+    .alert { padding: 13px 16px; border-radius: var(--r-sm); font-size: 13px; display: flex; align-items: flex-start; gap: 9px; }
+    .alert-err  { background: var(--red-pale);  border: 1px solid var(--red-bdr);  color: var(--red); }
+    .alert-info { background: var(--blue-pale); border: 1px solid var(--blue-bdr); color: var(--blue); }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle;
+    }
+    .spinner-blue {
+      border-color: rgba(26,79,214,.2); border-top-color: var(--blue);
+    }
+
+    /* ── Loading state ── */
+    .loading-state {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 48px; color: var(--muted); font-size: 13px;
+    }
+
+    @media (max-width: 680px) {
+      .topbar { padding: 0 16px; }
+      .topbar-divider { margin: 0 12px; }
+      .nav-link { padding: 5px 8px; font-size: 12px; }
+      .page { padding: 20px 14px 60px; }
+      .form-wrap { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <rect x="9" y="4" width="6" height="8" rx="1" stroke="#fff" stroke-width="1.5"/>
+        <path d="M7.5 8h1" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    DevTools
+  </a>
+  <div class="topbar-divider"></div>
+  <nav class="topbar-nav">
+    <a href="pilot-config.html"     class="nav-link">Pilot Config</a>
+    <a href="string-resources.html" class="nav-link">String Resources</a>
+    <a href="launchpad-config.html" class="nav-link">Launchpad Formats</a>
+    <a href="notifications.html"    class="nav-link active">Notifications</a>
+  </nav>
+  <div class="topbar-end">
+    <button class="btn btn-ghost btn-sm" onclick="toggleSettings()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.37 11.37l1.41 1.41M3.22 12.78l1.41-1.41M11.37 4.63l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Environments
+    </button>
+  </div>
+</header>
+
+<div class="page">
+<div class="form-wrap">
+
+  <!-- Settings -->
+  <div class="settings-panel" id="settingsPanel">
+    <div class="settings-head">
+      Environments
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="addEnvRow()">+ Add</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+    <div class="settings-body">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Name &amp; Base URL</div>
+      <div id="envRows"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addEnvRow()">+ Add Environment</button>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div class="card">
+    <div class="card-body">
+      <div class="env-col">
+        <div class="env-col-head">
+          <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" opacity=".7"/></svg>
+          Environment
+        </div>
+        <div class="env-col-body">
+          <div class="field">
+            <label class="field-label">Select</label>
+            <select id="envSelect" onchange="onEnvChange()"></select>
+          </div>
+          <div class="uat-field" id="uatField">
+            <label class="field-label">Base URL</label>
+            <input type="url" id="uatUrl" placeholder="https://uat.api.example.com" />
+          </div>
+          <div class="field">
+            <label class="field-label" id="tokenLabel">Access Token</label>
+            <input type="password" id="token" placeholder="Paste access token" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+      <div class="fetch-row">
+        <div class="field">
+          <label class="field-label">User UUID</label>
+          <input type="text" id="uuid" placeholder="e.g. ab6c1c05-bd21-4338-9451-c7f5d03aca09" />
+        </div>
+        <button class="btn btn-primary" id="fetchBtn" onclick="fetchNotifications()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3v4l3 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Fetch Notifications
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- Results — full width -->
+<div id="results"></div>
+
+</div><!-- /page -->
+
+<script>
+  let environments  = [];
+  let currentNotifications = [];
+  let currentBase   = '';
+  let currentToken  = '';
+  let selectedMode  = '';
+
+  // ── Init ─────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('pc_envs');
+    environments = saved ? JSON.parse(saved) : [
+      { name: 'nonprodqa', url: 'https://nonprodqaapi-external.bidgely.com' },
+      { name: 'Prod-NA2',  url: 'https://naapi2-external.bidgely.com' },
+      { name: 'Prod-NA',   url: 'https://naapi.bidgely.com' },
+      { name: 'Prod-CA',   url: 'https://caapi.bidgely.com' },
+      { name: 'Prod-EU',   url: 'https://api.eu.bidgely.com' },
+      { name: 'UAT',       url: '', dynamic: true },
+    ];
+    renderEnvRows();
+    populateDropdown();
+  });
+
+  // ── Settings ─────────────────────────────────────────────────
+  function toggleSettings() {
+    const el = document.getElementById('settingsPanel');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+
+  function renderEnvRows() {
+    document.getElementById('envRows').innerHTML = environments.map((e, i) => `
+      <div class="env-setting-row" id="er-${i}">
+        <input type="text" value="${esc(e.name)}" placeholder="Name"
+               onchange="environments[${i}].name=this.value; populateDropdown()" />
+        <input type="url"  value="${esc(e.url)}"  placeholder="https://…"
+               onchange="environments[${i}].url=this.value" />
+        <button class="btn-remove" onclick="removeEnv(${i})">×</button>
+      </div>`).join('');
+  }
+
+  function addEnvRow()   { environments.push({ name: '', url: '' }); renderEnvRows(); populateDropdown(); }
+  function removeEnv(i)  { environments.splice(i, 1); renderEnvRows(); populateDropdown(); }
+
+  function saveSettings() {
+    environments.forEach((_, i) => {
+      const row = document.getElementById('er-' + i);
+      if (!row) return;
+      const ins = row.querySelectorAll('input');
+      environments[i].name = ins[0].value;
+      environments[i].url  = ins[1].value;
+    });
+    localStorage.setItem('pc_envs', JSON.stringify(environments));
+    populateDropdown();
+    document.getElementById('settingsPanel').style.display = 'none';
+  }
+
+  function populateDropdown() {
+    const sel  = document.getElementById('envSelect');
+    const prev = sel.value;
+    sel.innerHTML = environments.map((e, i) =>
+      `<option value="${i}">${esc(e.name || 'Environment ' + (i + 1))}</option>`).join('');
+    if (prev && environments[prev]) sel.value = prev;
+    onEnvChange();
+  }
+
+  function onEnvChange() {
+    const e = environments[parseInt(document.getElementById('envSelect').value)];
+    document.getElementById('tokenLabel').textContent = `Access Token — ${e?.name || 'Env'}`;
+    document.getElementById('uatField').style.display = e?.dynamic ? 'flex' : 'none';
+  }
+
+  // ── Fetch notifications list ──────────────────────────────────
+  async function fetchNotifications() {
+    const i   = parseInt(document.getElementById('envSelect').value);
+    const env = environments[i];
+    const base  = env?.dynamic ? document.getElementById('uatUrl').value.trim() : env?.url;
+    const token = document.getElementById('token').value.trim();
+    const uuid  = document.getElementById('uuid').value.trim();
+
+    if (!base)  { document.getElementById('uatUrl')?.focus(); return; }
+    if (!uuid)  { document.getElementById('uuid').focus(); return; }
+
+    currentBase  = base.replace(/\/$/, '');
+    currentToken = token;
+
+    const btn = document.getElementById('fetchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Fetching…';
+
+    const params = token ? `?access_token=${encodeURIComponent(token)}` : '';
+    const url = `${currentBase}/2.1/utility_notifications/users/${encodeURIComponent(uuid)}${params}`;
+
+    try {
+      const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+      const data = await res.json();
+      renderNotificationList(data);
+    } catch (e) {
+      document.getElementById('results').innerHTML =
+        `<div class="alert alert-err" style="max-width:860px;margin:0 auto;">${esc(e.message)}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3v4l3 1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Fetch Notifications`;
+  }
+
+  // ── Render the list + filter UI ───────────────────────────────
+  function renderNotificationList(data) {
+    const el = document.getElementById('results');
+
+    if (!data?.payload) {
+      el.innerHTML = `<div class="alert alert-err" style="max-width:860px;margin:0 auto;">Invalid response — no payload.</div>`;
+      return;
+    }
+
+    const { totalCount, deliveryModesSummary, notificationsList } = data.payload;
+    currentNotifications = notificationsList || [];
+    selectedMode = '';
+
+    // Build modes that actually have notifications
+    const activeModes = [...new Set(currentNotifications.map(n => n.deliveryMode))];
+
+    // Summary bar
+    let html = `<div class="summary-bar">
+      <span class="summary-total">${totalCount} notification${totalCount !== 1 ? 's' : ''}</span>`;
+
+    for (const m of (deliveryModesSummary || [])) {
+      const total = (m.successCount || 0) + (m.failureCount || 0);
+      if (total === 0) continue;
+      html += `<span class="mode-chip">
+        ${esc(m.deliveryMode)}
+        <span class="mode-chip-count">${total}</span>
+      </span>`;
+    }
+    html += `</div>`;
+
+    if (currentNotifications.length === 0) {
+      html += `<div class="alert alert-info" style="max-width:860px;margin:0 auto;">No notifications found for this user.</div>`;
+      el.innerHTML = html;
+      return;
+    }
+
+    // Filter panel — cascading dropdowns
+    html += `<div class="filter-panel">
+      <div class="filter-field">
+        <label class="field-label">Delivery Mode</label>
+        <select id="modeSelect" onchange="onModeChange()">
+          <option value="">Select mode…</option>
+          ${activeModes.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="filter-field" id="typeFieldWrap" style="display:none;">
+        <label class="field-label">Notification Type</label>
+        <select id="typeSelect" onchange="onTypeChange()">
+          <option value="">Select type…</option>
+        </select>
+      </div>
+      <div class="filter-field" id="tsFieldWrap" style="display:none;">
+        <label class="field-label">Generated At</label>
+        <select id="tsSelect" onchange="onTimestampChange()">
+          <option value="">Select timestamp…</option>
+        </select>
+      </div>
+    </div>`;
+
+    html += `<div id="notifContent"></div>`;
+
+    el.innerHTML = html;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Cascade: mode → type → timestamp ─────────────────────────
+  function onModeChange() {
+    selectedMode = document.getElementById('modeSelect').value;
+    resetBelow('type');
+
+    if (!selectedMode) return;
+
+    const types = [...new Set(
+      currentNotifications
+        .filter(n => n.deliveryMode === selectedMode)
+        .map(n => n.notificationType)
+    )].sort();
+
+    const typeSelect = document.getElementById('typeSelect');
+    typeSelect.innerHTML = `<option value="">Select type…</option>` +
+      types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    document.getElementById('typeFieldWrap').style.display = 'flex';
+  }
+
+  function onTypeChange() {
+    const type = document.getElementById('typeSelect').value;
+    resetBelow('ts');
+
+    if (!type) return;
+
+    const matches = currentNotifications.filter(n =>
+      n.deliveryMode === selectedMode && n.notificationType === type
+    );
+
+    if (matches.length === 1) {
+      fetchByNid(matches[0].notificationId, matches[0].deliveryMode);
+    } else if (matches.length > 1) {
+      const sorted = matches.slice().sort((a, b) => b.generationTimestamp - a.generationTimestamp);
+      const tsSelect = document.getElementById('tsSelect');
+      tsSelect.innerHTML = `<option value="">Select timestamp…</option>` +
+        sorted.map(m => `<option value="${esc(m.notificationId)}|${esc(m.deliveryMode)}">
+          ${formatTs(m.generationTimestamp)} — ${esc(m.status)}
+        </option>`).join('');
+      document.getElementById('tsFieldWrap').style.display = 'flex';
+    }
+  }
+
+  function onTimestampChange() {
+    const val = document.getElementById('tsSelect').value;
+    if (!val) return;
+    const [nid, deliveryMode] = val.split('|');
+    fetchByNid(nid, deliveryMode);
+  }
+
+  function resetBelow(from) {
+    if (from === 'type') {
+      document.getElementById('typeFieldWrap').style.display = 'none';
+      document.getElementById('typeSelect').innerHTML = '<option value="">Select type…</option>';
+    }
+    if (from === 'type' || from === 'ts') {
+      document.getElementById('tsFieldWrap').style.display = 'none';
+      document.getElementById('tsSelect').innerHTML = '<option value="">Select timestamp…</option>';
+    }
+    document.getElementById('notifContent').innerHTML = '';
+  }
+
+  // ── Fetch single notification by nid ─────────────────────────
+  async function fetchByNid(nid, deliveryMode) {
+    const contentEl = document.getElementById('notifContent');
+    contentEl.innerHTML = `<div class="loading-state">
+      <span class="spinner spinner-blue"></span> Loading notification…
+    </div>`;
+
+    const entry = currentNotifications.find(n => n.notificationId === nid);
+    const generationTimestamp = entry?.generationTimestamp ?? null;
+
+    const params = currentToken ? `?access_token=${encodeURIComponent(currentToken)}` : '';
+    const url = `${currentBase}/2.1/utility_notifications/notifications/${encodeURIComponent(nid)}${params}`;
+
+    try {
+      const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+      const data = await res.json();
+
+      if (data?.payload) {
+        renderNotificationContent(data.payload, deliveryMode || '', generationTimestamp);
+      } else {
+        contentEl.innerHTML = `<div class="alert alert-err">No payload in response.</div>`;
+      }
+    } catch (e) {
+      contentEl.innerHTML = `<div class="alert alert-err">${esc(e.message)}</div>`;
+    }
+  }
+
+  // ── Render notification content ───────────────────────────────
+  function renderNotificationContent(payload, deliveryMode, generationTimestamp) {
+    const { notificationTitle, notificationText, notificationBody, metaData } = payload;
+    const contentEl = document.getElementById('notifContent');
+
+    const tsIst = generationTimestamp
+      ? new Date(Number(generationTimestamp)).toLocaleString('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric', month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit',
+          hour12: true,
+        }) + ' IST'
+      : null;
+
+    // Modes with no body/text — render a clean title-only card
+    const isTitleOnly = !notificationText && !notificationBody;
+
+    if (isTitleOnly) {
+      const modeConfig = {
+        WhatsApp: {
+          iconClass: 'icon-whatsapp',
+          icon: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <path d="M14 2C7.373 2 2 7.373 2 14c0 2.16.572 4.19 1.57 5.94L2 26l6.22-1.54A11.94 11.94 0 0014 26c6.627 0 12-5.373 12-12S20.627 2 14 2z" fill="currentColor" opacity=".15" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 9c-.5 0-1.2.5-1.5 1-.5 1-.3 2.5.8 4s2.7 3 4.7 3.8c2 .8 3 .3 3.5-.2.4-.4.6-1 .6-1.3 0-.2-.8-.7-1.2-.9l-1-.5c-.3-.2-.5 0-.7.2l-.5.7c-.2.2-.4.2-.6.1-1-.5-2-1.3-2.7-2.3-.1-.2-.1-.4.1-.5l.5-.6c.2-.2.2-.5.1-.7l-.6-1.3c-.2-.4-.5-.5-.5-.5z" fill="currentColor"/>
+          </svg>`,
+          label: 'WhatsApp',
+        },
+        SMS: {
+          iconClass: 'icon-sms',
+          icon: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="2" y="5" width="24" height="16" rx="3" fill="currentColor" opacity=".12" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 22l3-3h0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12h12M8 16h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>`,
+          label: 'SMS',
+        },
+      };
+
+      const cfg = modeConfig[deliveryMode] || {
+        iconClass: 'icon-default',
+        icon: `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="3" y="3" width="22" height="22" rx="4" stroke="currentColor" stroke-width="1.5" fill="currentColor" opacity=".1"/><path d="M9 14h10M9 19h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        label: deliveryMode,
+      };
+
+      const entry = currentNotifications.find(n => n.notificationType && n.deliveryMode === deliveryMode) || {};
+
+      contentEl.innerHTML = `<div class="notification-viewer">
+        <div class="simple-notif-card">
+          <div class="simple-mode-icon ${cfg.iconClass}">${cfg.icon}</div>
+          <div class="simple-mode-label">${esc(cfg.label)} Notification</div>
+          <div class="simple-notif-title">${esc(notificationTitle)}</div>
+          ${tsIst ? `<div class="simple-ts">Generated at ${esc(tsIst)}</div>` : ''}
+          <div class="simple-delivered-row">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Delivered via ${esc(cfg.label)}
+          </div>
+          ${metaData?.pilotId ? `<div style="font-size:11px;color:var(--dim);">Pilot ${esc(String(metaData.pilotId))}</div>` : ''}
+        </div>
+      </div>`;
+      return;
+    }
+
+    // Standard layout — title + text + body
+    let metaHtml = `<div class="notification-meta">
+      <div class="notification-title">${esc(notificationTitle)}</div>
+      ${notificationText ? `<div class="notification-text">${esc(notificationText)}</div>` : ''}
+      ${tsIst ? `<div class="notif-generated-ts">Generated at ${esc(tsIst)}</div>` : ''}
+      <div class="notif-badge-row">
+        <span class="notif-badge">${esc(deliveryMode)}</span>`;
+
+    if (metaData?.eventName) metaHtml += `<span class="notif-badge">${esc(metaData.eventName)}</span>`;
+    if (metaData?.pilotId)   metaHtml += `<span class="notif-badge" style="background:var(--surface-hi);border-color:var(--border);color:var(--muted);">Pilot ${esc(String(metaData.pilotId))}</span>`;
+
+    metaHtml += `</div></div>`;
+
+    // Build body section
+    let bodyHtml = '';
+
+    if (deliveryMode === 'Email') {
+      bodyHtml = `<div class="body-card">
+        <div class="body-card-head">Email Preview</div>
+        <iframe id="emailFrame" class="email-frame"
+          sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+          title="Email preview"></iframe>
+      </div>`;
+    } else if (deliveryMode === 'Paper') {
+      bodyHtml = `<div class="body-card">
+        <div class="body-card-head">
+          PDF Report
+          <a href="${esc(notificationBody)}" target="_blank" rel="noopener"
+             class="btn btn-ghost btn-sm" style="text-decoration:none;font-size:11px;">
+            Open in new tab ↗
+          </a>
+        </div>
+        <iframe class="pdf-frame" src="${esc(notificationBody)}" title="PDF preview"></iframe>
+      </div>`;
+    } else if (notificationBody) {
+      bodyHtml = `<div class="body-card">
+        <div class="body-card-head">Notification Body</div>
+        <pre class="body-text">${esc(notificationBody)}</pre>
+      </div>`;
+    }
+
+    contentEl.innerHTML = `<div class="notification-viewer">
+      ${metaHtml}
+      ${bodyHtml}
+    </div>`;
+
+    // Set email srcdoc via JS to avoid attribute-escaping issues.
+    // Inject <base target="_blank"> so every link opens in a new tab.
+    if (deliveryMode === 'Email') {
+      const iframe = document.getElementById('emailFrame');
+      if (iframe) {
+        let html = notificationBody || '';
+        const baseTag = '<base target="_blank" rel="noopener noreferrer">';
+        if (/<head[\s>]/i.test(html)) {
+          html = html.replace(/<head([^>]*)>/i, `<head$1>${baseTag}`);
+        } else {
+          html = baseTag + html;
+        }
+        iframe.srcdoc = html;
+      }
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function formatTs(ms) {
+    if (!ms) return 'Unknown';
+    return new Date(Number(ms)).toLocaleString(undefined, {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>
