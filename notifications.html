@@ -465,7 +465,10 @@
   let currentNotifications = [];
   let currentBase   = '';
   let currentToken  = '';
+  let currentUuid   = '';
   let selectedMode  = '';
+  let currentNotificationTitle = '';
+  let currentMeasurementType = null;
 
   // ── Init ─────────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', () => {
@@ -543,6 +546,7 @@
 
     currentBase  = base.replace(/\/$/, '');
     currentToken = token;
+    currentUuid  = uuid;
 
     const btn = document.getElementById('fetchBtn');
     btn.disabled = true;
@@ -699,6 +703,8 @@
 
     const entry = currentNotifications.find(n => n.notificationId === nid);
     const generationTimestamp = entry?.generationTimestamp ?? null;
+    const measurementType = entry?.measurementType ?? null;
+    const measurementTypes = entry?.measurementTypes ?? null;
 
     const params = currentToken ? `?access_token=${encodeURIComponent(currentToken)}` : '';
     const url = `${currentBase}/2.1/utility_notifications/notifications/${encodeURIComponent(nid)}${params}`;
@@ -708,7 +714,7 @@
       const data = await res.json();
 
       if (data?.payload) {
-        renderNotificationContent(data.payload, deliveryMode || '', generationTimestamp);
+        renderNotificationContent(data.payload, deliveryMode || '', generationTimestamp, measurementType, measurementTypes);
       } else {
         contentEl.innerHTML = `<div class="alert alert-err">No payload in response.</div>`;
       }
@@ -718,7 +724,7 @@
   }
 
   // ── Render notification content ───────────────────────────────
-  function renderNotificationContent(payload, deliveryMode, generationTimestamp) {
+  function renderNotificationContent(payload, deliveryMode, generationTimestamp, measurementType, measurementTypes) {
     const { notificationTitle, notificationText, notificationBody, metaData } = payload;
     const contentEl = document.getElementById('notifContent');
 
@@ -782,8 +788,15 @@
     }
 
     // Standard layout — title + text + body
+    const measurementTypesStr = Array.isArray(measurementTypes) ? measurementTypes.join(', ') : measurementTypes;
+
     let metaHtml = `<div class="notification-meta">
       <div class="notification-title">${esc(notificationTitle)}</div>
+      ${measurementType || measurementTypesStr ? `<div class="notif-generated-ts">
+        ${measurementType ? `Measurement Type: ${esc(measurementType)}` : ''}
+        ${measurementType && measurementTypesStr ? ' &middot; ' : ''}
+        ${measurementTypesStr ? `Measurement Types: ${esc(measurementTypesStr)}` : ''}
+      </div>` : ''}
       ${notificationText ? `<div class="notification-text">${esc(notificationText)}</div>` : ''}
       ${tsIst ? `<div class="notif-generated-ts">Generated at ${esc(tsIst)}</div>` : ''}
       <div class="notif-badge-row">
@@ -805,13 +818,22 @@
           title="Email preview"></iframe>
       </div>`;
     } else if (deliveryMode === 'Paper') {
+      const isHerReport = /HER/i.test(notificationTitle || '');
+      currentNotificationTitle = notificationTitle || '';
+      currentMeasurementType = measurementType || null;
+
       bodyHtml = `<div class="body-card">
         <div class="body-card-head">
           PDF Report
-          <a href="${esc(notificationBody)}" target="_blank" rel="noopener"
-             class="btn btn-ghost btn-sm" style="text-decoration:none;font-size:11px;">
-            Open in new tab ↗
-          </a>
+          <div style="display:flex;gap:8px;">
+            ${isHerReport ? `<button class="btn btn-ghost btn-sm" id="nbiDownloadBtn" onclick="downloadNbiInteractions()">
+              Download NBI Interactions
+            </button>` : ''}
+            <a href="${esc(notificationBody)}" target="_blank" rel="noopener"
+               class="btn btn-ghost btn-sm" style="text-decoration:none;font-size:11px;">
+              Open in new tab ↗
+            </a>
+          </div>
         </div>
         <iframe class="pdf-frame" src="${esc(notificationBody)}" title="PDF preview"></iframe>
       </div>`;
@@ -842,6 +864,55 @@
         iframe.srcdoc = html;
       }
     }
+  }
+
+  // ── Download NBI interactions JSON for HER reports ────────────
+  async function fetchAndDownloadInteractions(fuelType) {
+    const params = new URLSearchParams({
+      mode: 'batch',
+      nbiRun: 'HER',
+      deliveryMode: 'Paper',
+      deliveryType: currentNotificationTitle,
+      fuelType: fuelType,
+    });
+    if (currentToken) params.set('access_token', currentToken);
+
+    const url = `${currentBase}/v3.0/internal/users/${encodeURIComponent(currentUuid)}/homes/1/interactions?${params.toString()}`;
+
+    const res  = await fetch(url, { headers: { Accept: 'application/json' } });
+    const data = await res.json();
+
+    const blob    = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `nbi-interactions-${currentUuid}-${fuelType}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  async function downloadNbiInteractions() {
+    const btn = document.getElementById('nbiDownloadBtn');
+    const originalLabel = btn ? btn.innerHTML : '';
+    const fuelTypes = currentMeasurementType ? [currentMeasurementType] : ['ELECTRIC', 'GAS'];
+
+    try {
+      for (let i = 0; i < fuelTypes.length; i++) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = fuelTypes.length > 1
+            ? `<span class="spinner spinner-blue"></span> Downloading ${i + 1}/${fuelTypes.length}…`
+            : '<span class="spinner spinner-blue"></span> Downloading…';
+        }
+        await fetchAndDownloadInteractions(fuelTypes[i]);
+      }
+    } catch (e) {
+      alert('Failed to download NBI interactions: ' + e.message);
+    }
+
+    if (btn) { btn.disabled = false; btn.innerHTML = originalLabel; }
   }
 
   // ── Helpers ───────────────────────────────────────────────────
